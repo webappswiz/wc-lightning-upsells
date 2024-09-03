@@ -1,0 +1,12 @@
+
+
+
+.lightning-upsells-container {
+  
+}
+
+.lightning-upsells-container .single-upsell-container {
+  border: 1px solid teal;
+  margin:10px;
+  padding:10px;
+}
