@@ -19,8 +19,12 @@ class Wclu_Db_Search extends Wclu_Core {
    * @global type $wpdb
    * @return \Wclu_Upsell_Offer
    */
-  public static function find_upsell_by_id( $id ) {
+  public static function find_upsell_by_id( int $id ) {
   
+    if ( $id === 0 ) {
+      return false;
+    }
+    
     global $wpdb;
     
     $upsell = false;
@@ -30,7 +34,7 @@ class Wclu_Db_Search extends Wclu_Core {
       
     $sql = "SELECT p.`ID`, p.`post_title` AS 'upsell_title', p.`post_content` AS `upsell_content`, pm.`meta_value` AS 'settings' from {$wp}posts AS p
       LEFT JOIN `{$wp}postmeta` AS pm on p.`ID` = pm.`post_id`
-      WHERE p.`ID ` = %d AND pm.`meta_key` = %s 
+      WHERE p.`ID` = %d AND pm.`meta_key` = %s 
       AND p.post_type = %s AND p.post_status =  'publish' ";
     
     $query_sql = $wpdb->prepare( $sql, array( $id, self::UPSELL_SETTINGS, self::POST_TYPE) );
@@ -51,22 +55,39 @@ class Wclu_Db_Search extends Wclu_Core {
   
   
   /**
+   * Finds all upsells except some undesirable ones.
    * 
-   * @global type $wpdb
+   * @param array $exclude_ids
+   * @global object $wpdb
    * @return \Wclu_Upsell_Offer
    */
-  public static function find_all_upsells() {
+  public static function find_all_upsells( $exclude_ids = array() ) {
     global $wpdb;
     
     $wp = $wpdb->prefix;
     
+    if ( count($exclude_ids) ) {
       
-    $sql = "SELECT p.`ID`, p.`post_title` AS 'upsell_title', p.`post_content` AS `upsell_content`, pm.`meta_value` AS 'settings' from {$wp}posts AS p
-      LEFT JOIN `{$wp}postmeta` AS pm on p.`ID` = pm.`post_id`
-      WHERE pm.`meta_key` = %s
-      AND p.post_type = %s AND p.post_status =  'publish' ";
-    
-    $query_sql = $wpdb->prepare( $sql, array( self::UPSELL_SETTINGS, self::POST_TYPE) );
+      // escape values and prepare the list of ids 
+      $ids = implode( ',', array_map( 'intval', $exclude_ids ) );
+      
+      $sql = "SELECT p.`ID`, p.`post_title` AS 'upsell_title', p.`post_content` AS `upsell_content`, pm.`meta_value` AS 'settings' from {$wp}posts AS p
+        LEFT JOIN `{$wp}postmeta` AS pm on p.`ID` = pm.`post_id`
+        WHERE pm.`meta_key` = %s
+        AND p.post_type = %s AND p.post_status =  'publish'
+        AND p.ID NOT in (" . $ids . ") ";
+
+      $query_sql = $wpdb->prepare( $sql, array( self::UPSELL_SETTINGS, self::POST_TYPE ) );
+      
+    }
+    else {
+      $sql = "SELECT p.`ID`, p.`post_title` AS 'upsell_title', p.`post_content` AS `upsell_content`, pm.`meta_value` AS 'settings' from {$wp}posts AS p
+        LEFT JOIN `{$wp}postmeta` AS pm on p.`ID` = pm.`post_id`
+        WHERE pm.`meta_key` = %s
+        AND p.post_type = %s AND p.post_status =  'publish' ";
+
+      $query_sql = $wpdb->prepare( $sql, array( self::UPSELL_SETTINGS, self::POST_TYPE) );
+    }
         
     $upsells = array();
     

@@ -181,7 +181,8 @@ class Wclu_Plugin extends Wclu_Core {
     ), $atts ) );  
     
     // TODO add search for matching upsells
-    $upsells = Wclu_Db_Search::find_all_upsells(); // this function always returns an array
+    $exclude_ids = Wclu_Cookie_Handler::get_skipped_upsells();
+    $upsells = Wclu_Db_Search::find_all_upsells( $exclude_ids ); // this function always returns an array
     
     if ( count( $upsells ) ) {
       $wclu_display_upsell = new Wclu_Display_Upsells( $upsells );
@@ -195,7 +196,7 @@ class Wclu_Plugin extends Wclu_Core {
     
   }
   
-/**
+  /**
    * Handler for 'accept_lightning' shortcode.
    * 
    * @param array $atts
@@ -216,6 +217,33 @@ class Wclu_Plugin extends Wclu_Core {
     if ( is_object( $upsell ) ) {
 
       $out = '?add-to-cart=' . $upsell->product_id . '&lightning=' . $upsell->id;
+    }
+    
+    return $out;
+    
+  }
+  
+   /**
+   * Handler for 'accept_lightning' shortcode.
+   * 
+   * @param array $atts
+   * @param string $content
+   * @return string
+   */
+  public function shortcode_skip_lightning( $atts, $content = null ) {
+    
+    $out = '';
+    
+    extract( shortcode_atts( array( 
+        'upsell_id' => 0,
+        'product_id' => 0
+    ), $atts ) );  
+    
+    $upsell = Wclu_Db_Search::find_upsell_by_id( $upsell_id ); // this function returns Wclu_Upsell_offer or false 
+    
+    if ( is_object( $upsell ) ) {
+
+      $out = '#skip_lightning_' . $upsell->id;
     }
     
     return $out;

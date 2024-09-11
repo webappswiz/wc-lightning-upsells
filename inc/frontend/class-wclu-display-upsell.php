@@ -26,10 +26,10 @@ class Wclu_Display_Upsells extends Wclu_Core {
     
     $out = '';
     if ( is_array($this->upsells) && count($this->upsells) ) {
-      foreach ( $this->upsells as $upsell_id => $upsell ) {
+      foreach ( $this->upsells as $upsell ) {
         
         // TODO: introduce separate template files 
-        $out .= "<div id='lightning-upsell-$upsell_id' class='single-upsell-container' >";
+        $out .= "<div id='lightning-upsell-$upsell->id' class='single-upsell-container' >";
         //$out .= '<h3 class="lightning-upsell-title">' . $data['upsell_title'] . '</h3>';
         $out .= '<div class="lightning-upsell-content">' . do_shortcode( $upsell->content ) . '</div>';
         $out .= "</div>";
@@ -47,11 +47,10 @@ class Wclu_Display_Upsells extends Wclu_Core {
     
     $out = '';
     if ( is_array($this->upsells) && count($this->upsells) ) {
-      foreach ( $this->upsells as $upsell_id => $data ) {
+      foreach ( $this->upsells as $upsell ) {
         
         // TODO: introduce separate template files 
-        $out .= "<div id='lightning-upsell-$upsell_id' class='single-upsell-container' >";
-        //$out .= '<h3 class="lightning-upsell-title">' . $data['upsell_title'] . '</h3>';
+        $out .= "<div id='lightning-upsell-$upsell->id' class='single-upsell-container' >";
         $out .= '<div class="lightning-upsell-content">' . do_shortcode( $upsell->content ) . '</div>';
         $out .= "</div>";
       }

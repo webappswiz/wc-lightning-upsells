@@ -4,5 +4,5 @@
  */
 ?>
 <p <?php echo get_block_wrapper_attributes(); ?>>
-  <div><?php echo(time()); echo(do_shortcode("[display_lightning_upsells]")); ?></div>
+  <div><?php echo(do_shortcode("[display_lightning_upsells]")); ?></div>
 </p>

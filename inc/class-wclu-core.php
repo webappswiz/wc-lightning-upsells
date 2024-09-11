@@ -56,7 +56,7 @@ class Wclu_Core {
   public static $default_upsell_settings = [
     'product_id'                             => 0,
     'price_type'                             => self::PRICE_TYPE_FIXED,
-    'price'                                  => 0
+    'offered_price'                          => 0
   ];
     
   /**
@@ -464,6 +464,37 @@ EOT;
     return $settings;
   }
   
+  
+  /**
+   * Finds products that could be offered in an upsell
+   * 
+   * @return array
+   */
+  public static function get_available_products_to_offer() {
+    global $wpdb;
+    
+    $products = array();
+    
+    $wp = $wpdb->prefix;
+    
+      
+    $sql = "SELECT p.`ID`, p.`post_title` AS 'product_title' from {$wp}posts AS p
+      WHERE p.post_type = %s AND p.post_status =  'publish' ";
+    
+    $query_sql = $wpdb->prepare( $sql, array( 'product' ) );
+        
+    $results = $wpdb->get_results( $query_sql, ARRAY_A );
+    
+    if ( $results ) {
+      
+      foreach ( $results as  $row ) {
+        $products[$row['ID']] = $row['product_title'];
+      }
+    }
+    
+    return $products;
+  }
+  
   /**
    * Write into WooCommerce log. 
    * 
@@ -471,6 +502,9 @@ EOT;
    * @param array $data
    */
   public static function wc_log( string $message, array $data ) {
+    
+    $data['source'] = 'wc-lightning-upsells';
+    
     wc_get_logger()->info(
       $message,
       $data

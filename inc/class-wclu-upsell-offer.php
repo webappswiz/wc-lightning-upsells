@@ -42,4 +42,15 @@ class Wclu_Upsell_Offer extends Wclu_Core {
     }
   }
   
+  public function get_product_price() {
+    
+    $price = 10; // TODO calculate non-fixed prices;
+  
+    if ( $this->price_type === self::PRICE_TYPE_FIXED ) {
+      $price = $this->offered_price;
+    }
+    
+    return $price;
+  }
+  
 }

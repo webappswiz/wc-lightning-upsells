@@ -197,7 +197,7 @@ class Wclu_Post_Type extends Wclu_Core {
     
     $upsell_product_id = $upsell_settings['product_id'];
     $upsell_price_type = $upsell_settings['price_type'];
-    $upsell_price      = $upsell_settings['price'];
+    $upsell_price      = $upsell_settings['offered_price'];
     
     ob_start();
 
@@ -208,11 +208,7 @@ class Wclu_Post_Type extends Wclu_Core {
       self::PRICE_TYPE_PERCENT_DISCOUNT     => __( 'Percent Discount', WCLU_TEXT_DOMAIN ),
     );	
 
-    $products = array(
-      '333' => 'Mellow Flutes by Sacramento',
-      '511' => 'Steve Jobs Boring Orchestra',
-      '1122' => 'Embrace the Silence by EarthSounds'
-    );
+    $products = self::get_available_products_to_offer();
     
     ?>
       <p class="form-field">
@@ -237,7 +233,7 @@ class Wclu_Post_Type extends Wclu_Core {
       <p class="form-field">
 						<label for="offered_at"><?php echo __( 'Offer At', WCLU_TEXT_DOMAIN ); ?></label>
 						
-            <input type="number" step="any" min="0" class="short" name="<?php echo $postfield; ?>[price]" id="offer_price" placeholder="Enter price" value="<?php echo esc_attr($upsell_price); ?>"> 
+            <input type="number" step="any" min="0" class="short" name="<?php echo $postfield; ?>[offered_price]" id="offer_price" placeholder="Enter price" value="<?php echo esc_attr($upsell_price); ?>"> 
             
 						<select id="wclu_upsell_price_type" name="<?php echo $postfield; ?>[price_type]" class="select short">
 							<?php
