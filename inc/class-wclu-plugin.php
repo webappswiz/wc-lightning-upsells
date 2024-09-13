@@ -181,7 +181,20 @@ class Wclu_Plugin extends Wclu_Core {
     ), $atts ) );  
     
     // TODO add search for matching upsells
-    $exclude_ids = Wclu_Cookie_Handler::get_skipped_upsells();
+    
+    $skipped_ids = Wclu_Cookie_Handler::get_skipped_upsells();
+    $accepted_ids = Wclu_Cookie_Handler::get_accepted_upsells();
+    
+    $current_upsell_id = filter_input(INPUT_GET, 'lightning', FILTER_VALIDATE_INT);
+    
+    $exclude_ids = array_merge( $skipped_ids, $accepted_ids );
+    
+    if ( $current_upsell_id ) { // special case when user has just accepted an upsell
+      $exclude_ids[] = $current_upsell_id;
+    }
+    
+    self::wc_log('WCLU - display_lightning_upsells', [ 'skipped_ids' => $skipped_ids, 'accepted_ids' => $accepted_ids, 'exclude_ids' => $exclude_ids ] );
+    
     $upsells = Wclu_Db_Search::find_all_upsells( $exclude_ids ); // this function always returns an array
     
     if ( count( $upsells ) ) {

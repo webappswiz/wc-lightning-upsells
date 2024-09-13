@@ -17,6 +17,8 @@ class Wclu_Cart_Handler extends Wclu_Core {
   /**
    * Callback for "woocommerce_add_cart_item_data" filter which is applied in WC_Cart->add_to_cart()
    * 
+   * We check for the 'lightning' value in POST array, and if it contains an ID of a valid upsell, then apply it.
+   * 
    * @param array $cart_item_data
    * @param int $product_id
    * @param int $variation_id
@@ -27,7 +29,7 @@ class Wclu_Cart_Handler extends Wclu_Core {
     $upsell_id = filter_input(INPUT_GET, 'lightning', FILTER_VALIDATE_INT);
     $upsell = Wclu_Db_Search::find_upsell_by_id( intval($upsell_id) );
     
-    if ( $upsell ) { // should be Wclu_Upsell_Offer
+    if ( $upsell ) { // should be Wclu_Upsell_Offer or false
       
       $custom_upsell_data = array(
         'upsell_id' => $upsell_id,
@@ -36,7 +38,9 @@ class Wclu_Cart_Handler extends Wclu_Core {
         
       $cart_item_data = array_merge( $cart_item_data, $custom_upsell_data );
       
-       self::wc_log('WCLU - add_item_metadata', [ 'cart_item_data' => $cart_item_data ] );
+      self::wc_log('WCLU - add_item_metadata', [ 'cart_item_data' => $cart_item_data ] );
+      
+      Wclu_Cookie_Handler::save_accept_for_upsell( $upsell_id );
     }
      
     return $cart_item_data;
@@ -53,18 +57,17 @@ class Wclu_Cart_Handler extends Wclu_Core {
           $item['upsell_product_price'] = $values['upsell_product_price'];
       }
       
-      self::wc_log('WCLU - wdm_get_cart_items_from_session', [ 'item' => $item ] );
+      //self::wc_log('WCLU - get_cart_items_from_session', [ 'item' => $item ] );
 
       return $item;
   }
   
   public function add_values_to_order_item_meta( $item_id, $values ) {
-    global $woocommerce,$wpdb;
 
     wc_add_order_item_meta( $item_id,'_upsell_id', $values['upsell_id'] );
-    wc_add_order_item_meta( $item_id,'_upsell_product_price', $values['upsell_product_price'] ); //$values['_custom_options']['another_example_field']);
+    wc_add_order_item_meta( $item_id,'_upsell_product_price', $values['upsell_product_price'] ); 
 
-    self::wc_log('WCLU - wdm_add_values_to_order_item_meta', [ 'values' => $values ] );
+    self::wc_log('WCLU - add_values_to_order_item_meta', [ 'values' => $values ] );
   }
   
   
