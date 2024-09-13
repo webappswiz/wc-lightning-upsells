@@ -33,7 +33,7 @@ class Wclu_Cart_Handler extends Wclu_Core {
       
       $custom_upsell_data = array(
         'upsell_id' => $upsell_id,
-        'upsell_product_price' => $upsell->get_product_price()
+        'upsell_product_price' => $upsell->get_offered_price()
       );
         
       $cart_item_data = array_merge( $cart_item_data, $custom_upsell_data );

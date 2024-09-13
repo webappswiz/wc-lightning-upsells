@@ -149,6 +149,7 @@ class Wclu_Plugin extends Wclu_Core {
    */
   public function register_shortcodes() {
   	add_shortcode( 'display_lightning_upsells',   array( $this, 'shortcode_display_lightning_upsells' ) );
+    
     add_shortcode( 'accept_lightning',            array( $this, 'shortcode_accept_lightning' ) );
 		add_shortcode( 'skip_lightning',              array( $this, 'shortcode_skip_lightning' ) );
   }
@@ -221,15 +222,16 @@ class Wclu_Plugin extends Wclu_Core {
     $out = '';
     
     extract( shortcode_atts( array( 
-        'upsell_id' => 0,
-        'product_id' => 0
+        'upsell_id' => 0
     ), $atts ) );  
     
-    $upsell = Wclu_Db_Search::find_upsell_by_id( $upsell_id ); // this function returns Wclu_Upsell_offer or false 
     
-    if ( is_object( $upsell ) ) {
+    if ( $upsell_id > 0 ) {
+      $upsell = Wclu_Db_Search::find_upsell_by_id( $upsell_id ); // this function returns Wclu_Upsell_offer or false 
 
-      $out = '?add-to-cart=' . $upsell->product_id . '&lightning=' . $upsell->id;
+      if ( is_object( $upsell ) ) {
+        $out = '?add-to-cart=' . $upsell->product_id . '&lightning=' . $upsell->id;
+      }
     }
     
     return $out;
@@ -248,8 +250,7 @@ class Wclu_Plugin extends Wclu_Core {
     $out = '';
     
     extract( shortcode_atts( array( 
-        'upsell_id' => 0,
-        'product_id' => 0
+        'upsell_id' => 0
     ), $atts ) );  
     
     $upsell = Wclu_Db_Search::find_upsell_by_id( $upsell_id ); // this function returns Wclu_Upsell_offer or false 
