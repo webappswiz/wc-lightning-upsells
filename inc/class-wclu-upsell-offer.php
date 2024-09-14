@@ -19,7 +19,7 @@ class Wclu_Upsell_Offer extends Wclu_Core {
   public $price_type; // must be one of Wclu_Core::PRICE_TYPE_XXXXXX
   public $offered_price;
   
-  private $regular_product_price;
+  
   
   // form tags available inside upsell content
   
@@ -30,6 +30,12 @@ class Wclu_Upsell_Offer extends Wclu_Core {
     'product_price'
   );
   
+  // internal data gathered by upsell object
+  
+  private $product_obj;
+  private $regular_product_price;
+  private $product_name;
+    
   /**
    * 
    * @param int $upsell_id
@@ -52,7 +58,20 @@ class Wclu_Upsell_Offer extends Wclu_Core {
       }
     }
     
-    $this->regular_product_price = $this->get_product_price();
+    // Gather the data about offered product
+    
+    $pf = new WC_Product_Factory();
+    $product = $pf->get_product( $this->product_id ); 
+    
+    if ( is_object( $product ) ) {
+      $this->product_obj = $product;
+      $this->regular_product_price = $product->get_regular_price();
+      $this->product_name = $product->get_title();
+    }
+    else {
+      $this->regular_product_price = 0.0;
+      $this->product_name = '???';
+    }
     
   }
   
@@ -157,17 +176,17 @@ class Wclu_Upsell_Offer extends Wclu_Core {
    * 
    * @return float
    */
-  private function get_product_price() {
-    
-    $price = 0.0;
-    
-    $pf = new WC_Product_Factory();
-    $product = $pf->get_product( $this->product_id ); 
-    if ( is_object( $product ) ) {
-      $price = $product->get_regular_price();
-    }
-    
-    return $price;
+  public function get_product_price() {
+    return $this->regular_product_price;
+  }
+  
+  /**
+   * Get the name of the product which is offered in this upsell.
+   * 
+   * @return string
+   */
+  public function get_product_name() {
+    return $this->product_name;
   }
   
   /**
