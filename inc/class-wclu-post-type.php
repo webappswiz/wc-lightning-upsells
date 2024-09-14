@@ -45,9 +45,9 @@ class Wclu_Post_Type extends Wclu_Core {
     $args = array(
       'labels'              => $labels,
       'description'         => '',
-      'public'              => true,
+      'public'              => false,
       'exclude_from_search' => true,
-      'publicly_queryable'  => true,
+      'publicly_queryable'  => false,
       'show_ui'             => true,
       'show_in_nav_menus'   => true,
       'show_in_menu'        => true,
@@ -87,7 +87,7 @@ class Wclu_Post_Type extends Wclu_Core {
         array( 'Wclu_Post_Type', 'display_metabox_with_custom_css' ),   // callback
         Wclu_Core::POST_TYPE,                                           // post type
         'normal',                                                       // metabox placement
-        'high'
+        'low'
       );
       
       add_meta_box( 
@@ -236,7 +236,7 @@ class Wclu_Post_Type extends Wclu_Core {
     
     ?>
       <p class="form-field">
-        <label id="wclu_upsell_product_id" for="wclu_upsell_product_id">
+        <label for="wclu_upsell_product_id" for="wclu_upsell_product_id">
           <strong><?php echo __( 'Which product to offer?', WCLU_TEXT_DOMAIN ); ?></strong>
           <?php echo __( '(Select the product and set the price)', WCLU_TEXT_DOMAIN ); ?>
         </label>

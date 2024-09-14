@@ -92,6 +92,10 @@ class Wclu_Plugin extends Wclu_Core {
       $js_dependencies[] = 'wp-theme-plugin-editor'; 
       wp_enqueue_script( 'wp-theme-plugin-editor' );
       wp_enqueue_style( 'wp-codemirror' );
+      
+      $js_dependencies[] = 'selectWoo'; 
+      wp_enqueue_script( 'selectWoo' );
+      //wp_enqueue_style( 'selectWoo' );
     }
 
     wp_enqueue_script( 'wclu-admin-js', plugins_url( '/js/wclu-admin.js', self::$plugin_root ), $js_dependencies, WCLU_VERSION, true );
