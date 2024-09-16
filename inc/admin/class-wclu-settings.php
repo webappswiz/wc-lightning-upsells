@@ -15,8 +15,8 @@ class Wclu_Settings extends Wclu_Core {
 	public static function add_page_to_menu() {
     
 		add_management_page(
-			__( 'Image Generation Dashboard' ),          // page title.
-			__( 'Image Generation Dashboard' ),          // menu title.
+			__( 'Lightning Upsells Dashboard' ),          // page title.
+			__( 'Lightning Upsells Dashboard' ),          // menu title.
 			'manage_options',
 			'wclu-settings',			                // menu slug.
 			array( 'Wclu_Settings', 'render_settings_page' )   // callback.

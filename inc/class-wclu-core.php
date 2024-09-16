@@ -27,6 +27,14 @@ class Wclu_Core {
   public const PRICE_TYPE_DISCOUNT              = 'fixed_discount';
   public const PRICE_TYPE_PERCENT_DISCOUNT      = 'discount_fraction';
   
+  // available conditions for the cart total
+  
+  public const CART_CND_TYPE_LESS               = 'le';
+  public const CART_CND_TYPE_LESS_EQUAL         = 'leq';
+  public const CART_CND_TYPE_GREATER            = 'gr';
+  public const CART_CND_TYPE_GREATER_EQUAL      = 'greq';
+  
+  
   // name of the submit button that triggers POST form
   public const BUTTON_SUMBIT = 'wclu-button';
   
@@ -56,7 +64,9 @@ class Wclu_Core {
   public static $default_upsell_settings = [
     'product_id'                             => 0,
     'price_type'                             => self::PRICE_TYPE_FIXED,
-    'offered_price'                          => 0
+    'offered_price'                          => 0,
+    'cart_total_condition'                   => 0,
+    'cart_condition_type'                    => self::CART_CND_TYPE_GREATER
   ];
     
   /**

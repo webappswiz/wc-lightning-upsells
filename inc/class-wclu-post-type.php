@@ -154,18 +154,20 @@ class Wclu_Post_Type extends Wclu_Core {
     //echo('<pre>' . print_r($post, 1) . '</pre>');
     //echo('$upsell_settings<pre>' . print_r($upsell_settings, 1) . '</pre>');die();
     
+    $products = self::get_available_products_to_offer();
+    
     $upsell_data_tabs = array(
       'offered_product' => array(
         'label'  => __( 'Upsell deal', WCLU_TEXT_DOMAIN ),
         'target' => 'wclu-upsell-deal',
         'class'  => array( 'wclu-upsell-deal-tab' ),
-        'contents' => self::get_upsell_deal_tab_contents( $upsell_id, $upsell_settings )
+        'contents' => self::get_deal_tab_contents( $upsell_id, $upsell_settings, $products )
       ),
-      'show_when'       => array(
-        'label'  => __( 'Upsell rules', WCLU_TEXT_DOMAIN ),
-        'target' => 'wclu-upsell-rules',
-        'class'  => array( 'wclu-upsell-rules-tab' ),
-        'contents' => 'BBBBBB'
+      'upsell_conditions' => array(
+        'label'  => __( 'Upsell conditions', WCLU_TEXT_DOMAIN ),
+        'target' => 'wclu-upsell-conditions',
+        'class'  => array( 'wclu-upsell-conditions-tab' ),
+        'contents' => self::get_conditions_tab_contents( $upsell_id, $upsell_settings, $products )
       )
     );
 
@@ -197,9 +199,10 @@ class Wclu_Post_Type extends Wclu_Core {
    * 
    * @param int $upsell_id
    * @param array $upsell_settings
+   * @param array $products items available to offer
    * @return string
    */
-  public static function get_upsell_deal_tab_contents( int $upsell_id, array $upsell_settings ) {
+  public static function get_deal_tab_contents( int $upsell_id, array $upsell_settings, array $products ) {
     
     $postfield    = self::METABOX_FIELD_NAME;
     
@@ -217,9 +220,7 @@ class Wclu_Post_Type extends Wclu_Core {
       self::PRICE_TYPE_FIXED                => __( 'Fixed Price', WCLU_TEXT_DOMAIN ),
       self::PRICE_TYPE_DISCOUNT             => __( 'Fixed Price Discount', WCLU_TEXT_DOMAIN ),
       self::PRICE_TYPE_PERCENT_DISCOUNT     => __( 'Percent Discount', WCLU_TEXT_DOMAIN ),
-    );	
-
-    $products = self::get_available_products_to_offer();
+    );
     
     if ( $upsell_product_id === 0 ) {
       $offered_price        = 0;
@@ -236,7 +237,7 @@ class Wclu_Post_Type extends Wclu_Core {
     
     ?>
       <p class="form-field">
-        <label for="wclu_upsell_product_id" for="wclu_upsell_product_id">
+        <label for="wclu_upsell_product_id">
           <strong><?php echo __( 'Which product to offer?', WCLU_TEXT_DOMAIN ); ?></strong>
           <?php echo __( '(Select the product and set the price)', WCLU_TEXT_DOMAIN ); ?>
         </label>
@@ -296,6 +297,81 @@ class Wclu_Post_Type extends Wclu_Core {
           ?>
               
         <?php endif; ?>
+      </p>
+    <?php
+
+    $tab_html = ob_get_contents();
+    ob_end_clean();
+   
+    return $tab_html;
+  }
+  
+  /**
+   * Renders the "Upsell Deal" tab
+   * 
+   * @param int $upsell_id
+   * @param array $upsell_settings
+   * @return string
+   */
+  public static function get_conditions_tab_contents( int $upsell_id, array $upsell_settings, array $products ) {
+    
+    $postfield    = self::METABOX_FIELD_NAME;
+    
+    
+    
+    ob_start();
+
+    $products = self::get_available_products_to_offer();
+    
+    $cart_total_condition = $upsell_settings['cart_total_condition'];
+    $cart_condition_type = $upsell_settings['cart_condition_type'];
+    
+    $cart_condition_types = array(
+      self::CART_CND_TYPE_LESS                => __( 'Less than', WCLU_TEXT_DOMAIN ),
+      self::CART_CND_TYPE_LESS_EQUAL          => __( 'Less than or equal', WCLU_TEXT_DOMAIN ),
+      self::CART_CND_TYPE_GREATER             => __( 'Greater than', WCLU_TEXT_DOMAIN ),
+      self::CART_CND_TYPE_GREATER_EQUAL       => __( 'Greater than or equal', WCLU_TEXT_DOMAIN ),
+    );
+    
+    ?>
+      <p class="form-field">
+        <label for="wclu_upsell_product_id">
+          <strong><?php echo __( 'When to show this upsell?', WCLU_TEXT_DOMAIN ); ?></strong>
+          <?php echo __( '(enter conditions that allow to apply this upsell)', WCLU_TEXT_DOMAIN ); ?>
+        </label>
+      </p>
+      <p class="form-field">
+        <label for="wclu_upsell_cart_total_condition"><?php echo __( 'Cart total:', WCLU_TEXT_DOMAIN ); ?></label>
+
+        <select id="wclu_upsell_cart_condition_type" name="<?php echo $postfield; ?>[cart_condition_type]" class="select short">
+          <?php
+          foreach ( $cart_condition_types as $key => $value ) {
+            echo "<option value='$key' " . selected( $key, $cart_condition_type ) . "> $value </option>";
+          }
+          ?>
+        </select>
+                 
+        <input type="number" step="any" min="0" class="short" 
+               id="wclu_upsell_cart_total_condition" 
+               name="<?php echo $postfield; ?>[cart_total_condition]" 
+               placeholder="Enter amount" 
+               value="<?php echo esc_attr($cart_total_condition); ?>"> 
+
+        <?php
+          echo wc_help_tip( __( 'Enter amount for the cart total. Set to 0 to disable this condition', WCLU_TEXT_DOMAIN ) );
+        ?>
+      </p>
+      <p class="form-field">
+        <label for="offered_at"><?php echo __( 'Cart contains:', WCLU_TEXT_DOMAIN ); ?></label>
+
+        <select id="wclu_upsell_cart_contents" name="<?php echo $postfield; ?>[cart_contents]" class="select short">
+          <?php
+          foreach ( $products as $key => $value ) {
+            echo "<option value='$key' " . selected( $key, $cart_condition_type ) . "> $value </option>";
+          }
+          ?>
+        </select>
+           
       </p>
     <?php
 
