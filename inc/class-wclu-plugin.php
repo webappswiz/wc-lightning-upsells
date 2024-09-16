@@ -17,7 +17,7 @@ class Wclu_Plugin extends Wclu_Core {
 	const CHECK_RESULT_OK = 'ok';
   
   private static $cart_upsells_displayed = false;
-  private static $checkout_upsells_displayed = false;
+  private static $checkout_upsells_displayed = false; // TODO
   
   public function __construct( $plugin_root ) {
 
@@ -95,15 +95,16 @@ class Wclu_Plugin extends Wclu_Core {
       
       $js_dependencies[] = 'selectWoo'; 
       wp_enqueue_script( 'selectWoo' );
-      //wp_enqueue_style( 'selectWoo' );
     }
 
     wp_enqueue_script( 'wclu-admin-js', plugins_url( '/js/wclu-admin.js', self::$plugin_root ), $js_dependencies, WCLU_VERSION, true );
     
     wp_localize_script( 'wclu-admin-js', 'wclu_settings', array(
-      'ajax_url'          => admin_url( 'admin-ajax.php' ),
-      'use_codemirror'    => $codemirror_enabled,
-      'wclu_custom_css'  => wp_enqueue_code_editor( array('type' => 'text/css') ),
+      'ajax_url'                => admin_url( 'admin-ajax.php' ),
+      'use_codemirror'          => $codemirror_enabled,
+      'use_default_template'    => self::$option_values['use_default_template'],
+      'default_upsell_template' => self::$option_values['default_upsell_template'],
+      'wclu_custom_css'         => wp_enqueue_code_editor( array('type' => 'text/css') ),
     ) );
   }
   

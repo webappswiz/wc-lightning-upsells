@@ -51,16 +51,35 @@ class Wclu_Core {
   public static $messages = [];
   
   
+  /**
+   * List of plugin settings
+   * Used when installing into Wordpress
+   * 
+   * @var array
+   */
   public static $option_names = [
-    'test_setting_1'                         => 'string',
-    'test_setting_2'                         => 'string',
+    'use_default_template'                         => 'bool',
+    'default_upsell_template'                      => 'string',
   ];
   
+  /**
+   * List of default values for plugin settings
+   * Used when installing into Wordpress
+   * 
+   * @var array
+   */
 	public static $default_option_values = [
-    'test_setting_1'                         => '',
-    'test_setting_2'                         => '',
+    'use_default_template'                         => 1,
+    'default_upsell_template'                      => 'your awesome upsell',
 	];
   
+  
+  /**
+   * List of default upsell settings
+   * Used when creating a new upsell, or when upsell settings are not found
+   * 
+   * @var array
+   */
   public static $default_upsell_settings = [
     'product_id'                             => 0,
     'price_type'                             => self::PRICE_TYPE_FIXED,
