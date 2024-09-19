@@ -6,9 +6,18 @@ jQuery(document).ready(function( $ ){
     wp.codeEditor.initialize( jQuery( '#wclu_custom_css' ), wclu_settings.wclu_custom_css );
   }
   
-  // Initialise product dropdwon
+  // Initialise product dropdowns
+  
   if ( document.getElementById( 'wclu_upsell_product_id') ) {
     $( '#wclu_upsell_product_id' ).selectWoo();
+  }
+  
+    if ( document.getElementById( 'wclu_upsell_cart_contents') ) {
+      console.log('Be be be');
+    $( '#wclu_upsell_cart_contents' ).selectWoo();
+  }
+  else {
+      console.log('Oh well');
   }
   
   // Enable tabbed panels
