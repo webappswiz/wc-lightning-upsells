@@ -184,6 +184,8 @@ class Wclu_Post_Type extends Wclu_Core {
     
     $postfield    = self::METABOX_FIELD_NAME;
     $settings     = self::get_upsell_settings( $upsell_id );
+	
+	echo('$settings<pre>' . print_r( $settings , 1 ) . '</pre>' );
     $custom_css   = $settings['custom_css'] ?? '';
 
     ?>
@@ -223,7 +225,7 @@ class Wclu_Post_Type extends Wclu_Core {
     // Check the post type and user's permissions
     if ( filter_input( INPUT_POST, 'post_type', FILTER_SANITIZE_STRING ) == Wclu_Core::POST_TYPE && current_user_can( 'edit_page', $post_id ) ) {
 
-      
+      //echo('<pre>' . print_r( $_POST , 1 ) . '</pre>' ); die();
       
       // it's safe for us to save the data now
 
@@ -232,18 +234,27 @@ class Wclu_Post_Type extends Wclu_Core {
        
       if ( is_array( $wclu_settings ) ) {
         
-        // special case for checkbox
-        if ( ! isset( $wclu_settings['upsells_enabled'] ) ) {
-          $wclu_settings['upsells_enabled'] = false;
-        }
-        else {
-          $wclu_settings['upsells_enabled'] = true;
-        }
-        
-        //$wclu_settings['custom_css'] = $_POST[]
-
+        // special case for checkboxes
+		$wclu_settings = $this->add_checkboxes_values( $wclu_settings );
+		
         update_post_meta($post_id, self::UPSELL_SETTINGS, $wclu_settings );
       }
     }
+  }
+  
+  protected function add_checkboxes_values( $wclu_settings ) {
+	
+	$checkboxes = [ 'cart_total_enabled', 'cart_contents_enabled', 'cart_must_hold_all']; 
+		
+	foreach ( $checkboxes as $checkbox ) {
+	  if ( ! isset( $wclu_settings[$checkbox] ) ) {
+		$wclu_settings[$checkbox] = false;
+	  }
+	  else {
+		$wclu_settings[$checkbox] = true;
+	  }
+	}
+	
+	return 	$wclu_settings;
   }
 }
