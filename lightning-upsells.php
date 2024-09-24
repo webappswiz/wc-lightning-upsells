@@ -9,7 +9,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  * Requires at least: 5.4
  * Requires PHP: 7.4
- * Version: 0.1.5
+ * Version: 0.1.6
  */
 /*
   This program is free software; you can redistribute it and/or modify
@@ -29,7 +29,7 @@
 
 require_once 'includes.php';
 
-define('WCLU_VERSION', '0.1.5');
+define('WCLU_VERSION', '0.1.6');
 define('WCLU_TEXT_DOMAIN', 'wc-lightning-upsells');
 
 if (!defined('WCLU_URL')) {

@@ -13,6 +13,7 @@ include('inc/admin/tabs/class-wclu-tab-deal.php');
 
 
 include('inc/frontend/class-wclu-cart-handler.php');
+include('inc/frontend/class-wclu-conditions-finder.php');
 include('inc/frontend/class-wclu-cookie-handler.php');
 include('inc/frontend/class-wclu-display-upsell.php');
 include('inc/frontend/class-wclu-db-search.php');

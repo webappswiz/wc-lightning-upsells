@@ -9,32 +9,48 @@ class Wclu_Core {
 	public static $plugin_root;
 
 	public const POST_TYPE = 'lightning_upsell';
+	
 	// options key used to save plugin settings
 	public const OPTION_NAME_SETTINGS = 'wclu_options';
+	
 	// postmeta key used to save generation settings for each separate upsell
 	public const UPSELL_SETTINGS = 'wclu_settings';
 
 	public static $prefix = 'wclu_';
 
 	// names of HTML fields in the form
-	public const FIELD_DATE_START = 'report_date_start';
-	public const FIELD_DATE_END = 'report_date_end';
+	public const FIELD_DATE_START             = 'report_date_start';
+	public const FIELD_DATE_END               = 'report_date_end';
+	
 	// available price types for an upsell
-	public const PRICE_TYPE_FIXED = 'fixed_price';
-	public const PRICE_TYPE_DISCOUNT = 'fixed_discount';
-	public const PRICE_TYPE_PERCENT_DISCOUNT = 'discount_fraction';
+	public const PRICE_TYPE_FIXED             = 'fixed_price';
+	public const PRICE_TYPE_DISCOUNT          = 'fixed_discount';
+	public const PRICE_TYPE_PERCENT_DISCOUNT  = 'discount_fraction';
+	
+	
 	// available conditions for the cart total
 
-	public const CART_CND_TYPE_LESS = 'le';
-	public const CART_CND_TYPE_LESS_EQUAL = 'leq';
-	public const CART_CND_TYPE_GREATER = 'gr';
-	public const CART_CND_TYPE_GREATER_EQUAL = 'greq';
+	public const CART_CND_LESS                = 'le';
+	public const CART_CND_LESS_EQUAL          = 'leq';
+	public const CART_CND_GREATER             = 'gr';
+	public const CART_CND_GREATER_EQUAL       = 'greq';
+	
+	
+	// available condition types 
+
+	public const CND_CART_TOTAL               = 'ca_tot';
+	public const CND_CART_PRODUCTS            = 'ca_items';
+	public const CND_USER_BOUGHT              = 'user_items';
+	
 	// name of the submit button that triggers POST form
 	public const BUTTON_SUMBIT = 'wclu-button';
+	
 	// used in the admin area in plugin metabox.
 	const NONCE = 'wclu_metabox_nonce';
+	
 	// field name for upsell settings array (used in varius upsell-related metaboxes)
 	const METABOX_FIELD_NAME = 'wclu_post_data';
+	
 	// Actions triggered by buttons in backend area
 	public const ACTION_SAVE_OPTIONS = 'Save settings';
 
@@ -70,11 +86,15 @@ class Wclu_Core {
 	 * @var array
 	 */
 	public static $default_upsell_settings = [
-		'product_id' => 0,
-		'price_type' => self::PRICE_TYPE_FIXED,
-		'offered_price' => 0,
-		'cart_total_condition' => 0,
-		'cart_condition_type' => self::CART_CND_TYPE_GREATER
+		'product_id'                  => 0, // int
+		'price_type'                  => self::PRICE_TYPE_FIXED,
+		'offered_price'               => 0, // float
+		'cart_total_condition'        => 0, // float
+		'cart_condition_type'         => self::CART_CND_GREATER,
+		'cart_total_enabled'          => 0, // bool
+		'cart_contents_enabled'       => 0, // bool
+		'cart_must_hold_all'          => 0, // bool
+		'cart_contents'               => array(),
 	];
 
 	/**

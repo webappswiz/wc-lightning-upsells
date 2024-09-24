@@ -191,12 +191,14 @@ class Wclu_Plugin extends Wclu_Core {
 	$exclude_ids = array_merge( $skipped_ids, $accepted_ids );
 
 	if ( $current_upsell_id ) { // special case when user has just accepted an upsell
-	  $exclude_ids[] = $current_upsell_id;
+	  $exclude_ids[] = $current_upsell_id; // the accepted upsell should not shown again 
 	}
 
 	self::wc_log( 'WCLU - display_lightning_upsells', ['skipped_ids' => $skipped_ids, 'accepted_ids' => $accepted_ids, 'exclude_ids' => $exclude_ids] );
 
-	$upsells = Wclu_Db_Search::find_all_upsells( $exclude_ids ); // this function always returns an array
+	$current_conditions = Wclu_Conditions_Finder::find_conditions();
+	
+	$upsells = Wclu_Db_Search::find_matching_upsells( $current_conditions, $exclude_ids ); // this function always returns an array
 
 	if ( count( $upsells ) ) {
 	  $wclu_display_upsell = new Wclu_Display_Upsells( $upsells );

@@ -5,11 +5,29 @@
  */
 class Wclu_Db_Search extends Wclu_Core {
 
-	public static function find_matching_upsells() {
+	/**
+	 * Finds all upsells that meet the specified set of conditions
+	 * 
+	 * @param array $conditions set of upsell conditions to meet
+	 * @param array $exclude_ids IDs of upsells to exclude from result
+	 * @return array
+	 */
+	public static function find_matching_upsells( array $conditions, array $exclude_ids ) {
 
-		$upsell_ids = [1, 2, 300];
+		$matching_upsells = array();
 
-		return $upsell_ids;
+		$upsells = self::find_all_upsells( $exclude_ids );
+
+		echo('$conditions<pre>' . print_r( $conditions , 1 ) . '</pre>' );
+		if ( count( $upsells ) ) {
+			foreach ( $upsells as $upsell ) {
+				if ( $upsell->matches_conditions( $conditions ) ) {
+					$matching_upsells[] = $upsell;
+				}
+			}
+		}
+
+		return $matching_upsells;
 	}
 
 	/**

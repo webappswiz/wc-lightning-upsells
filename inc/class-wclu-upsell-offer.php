@@ -10,6 +10,7 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 	public $id = 0;
 	public $title;
 	public $content;
+	
 	// these properties are stored in wp_postmeta table, and we handle them by ourselves.
 	// default values for these properties are set in Wclu_Core::$default_upsell_settings
 
@@ -207,6 +208,120 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 
 				$result = $this->offered_price;
 				break;
+		}
+
+		return $result;
+	}
+	
+	/**
+	 * Checks if this upsell meets all specified conditions
+	 * 
+	 * @return bool
+	 */
+	public function matches_conditions( array $conditions ) {
+
+		$result = true; // by default upsell is matching. 
+
+		foreach ( $conditions as $condition ) {
+			if ( ! $this->matches_single_condition( $condition ) ) {
+				$result = false;
+				break;
+			}
+		}
+
+		return $result;
+	}
+	
+	/**
+	 * Checks if this upsell meets the specified condition
+	 * 
+	 * @return bool
+	 */
+	public function matches_single_condition( array $condition ) {
+
+		$result = true; // by default upsell is matching. 
+
+		// list of methods which can be used to check various conditions
+		$available_methods = [
+			self::CND_CART_TOTAL      => 'matches_cart_total',
+			self::CND_CART_PRODUCTS   => 'matches_cart_products',
+			self::CND_USER_BOUGHT     => 'matches_user_purchases'
+		];
+
+		if ( array_key_exists( $condition['type'], $available_methods ) && method_exists( $this, $available_methods[ $condition['type'] ] ) ) {
+			$method = $available_methods[ $condition['type'] ];
+			$result = $this->$method( $condition['value'] );
+		}
+
+		return $result;
+	}
+	
+	/**
+	 * Checks if this upsell meets the cart total condition
+	 * 
+	 * @return bool
+	 */
+	public function matches_cart_total( $cart_total ) {
+
+		$result = true;
+
+		if ( $this->cart_total_enabled ) { // this upsell is shown only when it matches the visitor's cart total amount
+			switch( $this->cart_condition_type ) {
+				case self::CART_CND_GREATER: // visitor cart total should be greater than upsell threshold 
+					$result = $cart_total > $this->cart_total_condition;
+					break;
+				case self::CART_CND_GREATER_EQUAL: // visitor cart total should be greater of equal than upsell threshold 
+					$result = $cart_total >= $this->cart_total_condition;
+					break;
+				case self::CART_CND_LESS: // visitor cart total should be less equal than upsell threshold 
+					$result = $cart_total < $this->cart_total_condition;
+					break;
+				case self::CART_CND_LESS_EQUAL: // visitor cart total should be less equal than upsell threshold 
+					$result = $cart_total <= $this->cart_total_condition;
+					break;
+			}
+		}
+
+		return $result;
+	}
+	
+	
+	/**
+	 * Checks if this upsell meets the cart contents condition
+	 * 
+	 * @return bool
+	 */
+	public function matches_cart_products( $cart_contents ) {
+
+		$result = true;
+
+		if ( $this->cart_contents_enabled && count( $this->cart_contents ) ) { // this upsell is shown only when it matches the visitor's cart content
+
+			$result = false;
+
+			if ( $this->cart_must_hold_all ) { // visitor cart should contain all of selected products
+
+				$found_products = 0;
+
+				foreach ( $this->cart_contents as $required_product_id ) {
+					if ( in_array( $required_product_id, $cart_contents) ) {
+						$found_products++;
+					}
+				}
+
+				if ( $found_products == count( $this->cart_contents ) ) {
+					$result = true;
+				}
+			}
+			else { // visitor cart should contain any of selected products
+
+				foreach ( $this->cart_contents as $sufficient_product_id ) {
+					if ( in_array( $sufficient_product_id, $cart_contents) ) {
+						$result = true;
+						break;
+					}
+				}
+			}
 		}
 
 		return $result;
