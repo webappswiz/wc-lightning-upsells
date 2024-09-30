@@ -226,8 +226,41 @@ class Wclu_Post_Type extends Wclu_Core {
 				$wclu_settings = $this->add_checkboxes_values( $wclu_settings );
 
 				update_post_meta( $post_id, self::UPSELL_SETTINGS, $wclu_settings );
+				
+				$this->maybe_create_upsell_statistics( $post_id );
 			}
 		}
+	}
+	
+	protected function maybe_create_upsell_statistics( $post_id ) {
+		
+		if ( $post_id === 0 ) {
+			return false;
+		}
+		
+		$created = false;
+
+		global $wpdb;
+
+		$upsell_table = $wpdb->prefix . 'wclu_upsells_data';
+
+		// Check if there is already a statistics record for this upsell
+		$checking_sql = "SELECT up.`upsell_id` from $upsell_table AS up WHERE up.`upsell_id` = %d ";
+
+		$checking_query = $wpdb->prepare( $checking_sql, array($post_id) );
+
+		$row = $wpdb->get_row( $checking_query, ARRAY_A );
+
+		if ( ! $row ) {
+			
+			$insert_sql = "INSERT INTO $upsell_table ( `upsell_id`, `views`, `accepts`, `skips` ) VALUES ( %d, 0, 0, 0 )";
+			
+			$insert_query = $wpdb->prepare( $insert_sql, array($post_id) );
+			
+			$created = $wpdb->query( $insert_query );
+		}
+
+		return $created;
 	}
 
 	protected function add_checkboxes_values( $wclu_settings ) {

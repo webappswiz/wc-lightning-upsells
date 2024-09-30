@@ -11,13 +11,6 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 	public $title;
 	public $content;
 	
-	// these properties are stored in wp_postmeta table, and we handle them by ourselves.
-	// default values for these properties are set in Wclu_Core::$default_upsell_settings
-
-	public $product_id;
-	public $price_type; // must be one of Wclu_Core::PRICE_TYPE_XXXXXX
-	public $offered_price;
-
 	// form tags available inside upsell content
 
 	const FORM_TAGS = array(
@@ -32,6 +25,20 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 	private $product_obj;
 	private $regular_product_price;
 	private $product_name;
+	
+	// these upsell properties are stored in wp_postmeta table (meta_key: Wclu_Core::UPSELL_SETTINGS )
+	// default values for these properties are set in Wclu_Core::$default_upsell_settings
+
+	public $product_id                  = 0; // int
+	public $price_type                  = self::PRICE_TYPE_FIXED;
+	public $offered_price               = 0; // float
+	public $cart_total_condition        = 0; // float
+	public $cart_condition_type         = self::CART_CND_GREATER;
+	public $cart_total_enabled          = 0; // bool
+	public $cart_contents_enabled       = 0; // bool
+	public $cart_must_hold_all          = 0; // bool
+	public $cart_contents               = array();
+	
 
 	/**
 	 * 
@@ -325,5 +332,43 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 		}
 
 		return $result;
+	}
+	
+	/**
+	 * 
+	 * @param string $event_type
+	 */
+	public function record_statistics_event( $event_type ) {
+	
+		global $wpdb;
+		
+		$updated = false;
+		
+		switch ( $event_type ) {
+			case self::EVENT_ACCEPT:
+			case self::EVENT_SKIP:
+			case self::EVENT_VIEW:
+				$event_field = $event_type . 's'; // make table column name
+				break;
+			default:
+				$event_field = false;
+		}
+		
+		if ( $event_field ) {
+			
+			$wp = $wpdb->prefix;
+			$upsell_table = $wpdb->prefix . 'wclu_upsells_data';
+
+
+			$update_sql = "UPDATE $upsell_table SET $event_field = $event_field + 1 WHERE upsell_id = %d LIMIT 1"; 
+			
+
+			$update_query = $wpdb->prepare( $update_sql, array( $this->id ) );
+			
+			$updated = $wpdb->query( $update_query );
+			
+		}
+		
+		return $updated;
 	}
 }

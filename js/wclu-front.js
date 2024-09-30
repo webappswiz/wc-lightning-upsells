@@ -70,9 +70,29 @@ let Wclu_Frontend = {
     let newValue = '|' + upsellId;
     document.cookie = `${cookieForSkippedUpsells}=${newValue}; path=/`;
 
+  },
+	
+	notifyAboutSkippedUpsell: function( upsellId ) {
+    
+		jQuery.ajax({
+			type: "POST",
+			url: wclu_settings.ajax_url,
+			data: {
+				action: 'wclu_upsell_skipped', 
+				upsell_id: upsellId
+			},
+			success: function(data, textStatus, jqXHR ) {
+				
+			},
+			error: function( jqXHR, textStatus, errorThrown ) {
+				
+			},
+			dataType: 'json'
+		});
+		
   }
 
-}
+};
 
 
 /**
@@ -96,6 +116,7 @@ function handleSkip(e) {
     if ( upsell_container ) {
       upsell_container.style.display = "none";
       Wclu_Frontend.saveSkippedUpsellToCookie( upsellId );
+			Wclu_Frontend.notifyAboutSkippedUpsell( upsellId );
     }
   }
 }

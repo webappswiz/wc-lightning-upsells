@@ -18,7 +18,7 @@ class Wclu_Db_Search extends Wclu_Core {
 
 		$upsells = self::find_all_upsells( $exclude_ids );
 
-		echo('$conditions<pre>' . print_r( $conditions , 1 ) . '</pre>' );
+		// echo('$conditions<pre>' . print_r( $conditions , 1 ) . '</pre>' );
 		if ( count( $upsells ) ) {
 			foreach ( $upsells as $upsell ) {
 				if ( $upsell->matches_conditions( $conditions ) ) {

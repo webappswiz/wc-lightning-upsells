@@ -42,6 +42,12 @@ class Wclu_Core {
 	public const CND_CART_PRODUCTS            = 'ca_items';
 	public const CND_USER_BOUGHT              = 'user_items';
 	
+	// available statistics event types for upsell
+	
+	public const EVENT_VIEW                   = 'view';
+	public const EVENT_SKIP                   = 'skip';
+	public const EVENT_ACCEPT                 = 'accept';
+	
 	// name of the submit button that triggers POST form
 	public const BUTTON_SUMBIT = 'wclu-button';
 	

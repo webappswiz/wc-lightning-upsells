@@ -7,7 +7,7 @@ class Wclu_Cart_Handler extends Wclu_Core {
 	 */
 	public function __construct() {
 
-		add_filter('woocommerce_add_cart_item_data', array($this, 'add_item_metadata'), 4, 10);
+		add_filter('woocommerce_add_cart_item_data', array($this, 'apply_upsell_for_cart_item'), 4, 10);
 
 		add_action('woocommerce_add_order_item_meta', array($this, 'add_values_to_order_item_meta'), 1, 2);
 		add_filter('woocommerce_get_cart_item_from_session', array($this, 'get_cart_items_from_session'), 1, 3);
@@ -24,12 +24,13 @@ class Wclu_Cart_Handler extends Wclu_Core {
 	 * @param int $variation_id
 	 * @param int $quantity
 	 */
-	public function add_item_metadata($cart_item_data, $product_id, $variation_id, $quantity) {
+	public function apply_upsell_for_cart_item($cart_item_data, $product_id, $variation_id, $quantity) {
 
 		$upsell_id = filter_input(INPUT_GET, 'lightning', FILTER_VALIDATE_INT);
 		$upsell = Wclu_Db_Search::find_upsell_by_id(intval($upsell_id));
 
-		if ($upsell) { // should be Wclu_Upsell_Offer or false
+		if ( $upsell ) { // should be Wclu_Upsell_Offer or false
+			
 			$custom_upsell_data = array(
 					'upsell_id' => $upsell_id,
 					'upsell_product_price' => $upsell->calculate_offered_price()
@@ -40,6 +41,7 @@ class Wclu_Cart_Handler extends Wclu_Core {
 			self::wc_log('WCLU - add_item_metadata', ['cart_item_data' => $cart_item_data]);
 
 			Wclu_Cookie_Handler::save_accept_for_upsell($upsell_id);
+			$upsell->record_statistics_event( self::EVENT_ACCEPT );
 		}
 
 		return $cart_item_data;

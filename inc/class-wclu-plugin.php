@@ -38,6 +38,7 @@ class Wclu_Plugin extends Wclu_Core {
 		add_action( 'init', array($this, 'add_gutenberg_blocks') );
 
 		add_action( 'init', array($this, 'register_shortcodes') );
+		add_action( 'init', array($this, 'register_ajax_actions') );
 		add_action( 'init', array($this, 'register_upsell_placement_actions') );
 		//add_action( 'init', array( 'Wclu_Core', 'set_user_cookie_identifier' ) );
 
@@ -58,6 +59,7 @@ class Wclu_Plugin extends Wclu_Core {
 	 */
 	public static function install() {
 		self::install_plugin_options();
+		self::create_database_tables();
 	}
 
 	/**
@@ -156,6 +158,18 @@ class Wclu_Plugin extends Wclu_Core {
 		add_shortcode( 'skip_lightning', array($this, 'shortcode_skip_lightning') );
 	}
 
+	/**
+	 * Register all plugin AJAX actions.
+	 * 
+	 * @hook init
+	 */
+	public function register_ajax_actions() {
+		
+		add_action( 'wp_ajax_wclu_upsell_skipped', array( $this, 'record_upsell_skipped_by_user' ) );
+		add_action( 'wp_ajax_nopriv_wclu_upsell_skipped', array( $this, 'record_upsell_skipped_by_user' ) );
+		
+	}
+	
 	/**
 	 * Register all plugin actions that display offers in various parts of website..
 	 * 
@@ -263,6 +277,22 @@ class Wclu_Plugin extends Wclu_Core {
 
 		return $out;
 	}
+	
+	/**
+	 * Handler for 'wclu_upsell_skipped' AJAX action.
+	 * 
+	 * @hook wp_ajax_wclu_upsell_skipped
+	 */
+	public function record_upsell_skipped_by_user() {
+		
+		$upsell_id = filter_input( INPUT_POST, 'upsell_id', FILTER_VALIDATE_INT );
+		
+		$upsell = Wclu_Db_Search::find_upsell_by_id( $upsell_id ); // returns Wclu_Upsell_Offer or false
+		
+		if ( $upsell ) {
+			$upsell->record_statistics_event( self::EVENT_SKIP );
+		}
+ 	}
 
 	/**
 	 * Displays matching upsells
@@ -339,12 +369,42 @@ class Wclu_Plugin extends Wclu_Core {
 
 		<div class="wclu-fieldset">
 
-				<?php // TODO: display here list of upsells and downsells related to this product.  ?>
-				<table class="form-table">
-						<?php //self::display_field_set( $fields );   ?>	
-				</table>
+			<?php // TODO: display here list of upsells and downsells related to this product.  ?>
+			<table class="form-table">
+					<?php //self::display_field_set( $fields );   ?>	
+			</table>
+		</div>
 
-				<?php
-			}
+		<?php
+	}
+	
+
+	/**
+	 * Creates DB tables when plugin is activated
+	 */
+	public static function create_database_tables() {
+
+		global $wpdb;
+
+		// Include upgrade script
+		require_once( ABSPATH . '/wp-admin/includes/upgrade.php' );
+
+		$upsell_table = $wpdb->prefix . 'wclu_upsells_data';
+
+		// Create table if not exist
+		if ( $wpdb->get_var( "show tables like '$upsell_table'" ) != $upsell_table ) {
+
+			$orderSql = "CREATE TABLE `$upsell_table` (
+				`upsell_id` INT NOT NULL PRIMARY KEY,
+				`views` INT NOT NULL DEFAULT 0,
+				`accepts` INT NOT NULL DEFAULT 0,
+				`skips` INT NOT NULL DEFAULT 0
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+			// Create orders table
+			dbDelta( $orderSql );
 		}
+	}
+
+}
 		

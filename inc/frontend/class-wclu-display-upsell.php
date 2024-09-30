@@ -29,6 +29,9 @@ class Wclu_Display_Upsells extends Wclu_Core {
 				if (is_a($upsell, 'Wclu_Upsell_Offer')) {
 
 					$upsell_content = $upsell->get_prepared_content();
+					
+					$upsell->record_statistics_event( self::EVENT_VIEW );
+									
 					$final_content = do_shortcode($upsell_content);
 
 					// TODO: introduce separate template files 
