@@ -6,11 +6,16 @@ class Wclu_Post_Type extends Wclu_Core {
 	 * Register Wordpress actions related to the post type and its metaboxes.
 	 */
 	public function __construct() {
-		add_action( 'init', array($this, 'register_post_type'), 20 );
+		add_action( 'init', array( $this, 'register_post_type' ), 20 );
 
+		// Custom columns
+		add_filter('manage_' . Wclu_Core::POST_TYPE . '_posts_columns', array( $this, 'add_custom_columns' ) );
+		
+		add_action('manage_' . Wclu_Core::POST_TYPE . '_posts_custom_column', array( $this, 'echo_content_for_custom_columns' ), 10, 2);
+		
+		// Metaboxes
 		add_action( 'add_meta_boxes', array($this, 'add_meta_boxes') );
 		add_action( 'add_meta_boxes', array($this, 'remove_unwanted_meta_boxes') );
-
 		add_action( 'save_post', array($this, 'save_meta_box_data') );
 	}
 
@@ -67,6 +72,72 @@ class Wclu_Post_Type extends Wclu_Core {
 		);
 
 		register_post_type( Wclu_Core::POST_TYPE, $args );
+	}
+
+	/**
+	 * Add custom columns to the admin list
+	 * 
+	 * @param array $columns
+	 * @return array
+	 */
+	public function add_custom_columns( $columns ) {
+		
+		// Keep default columns and add new in the desired places
+
+		$new_columns = array(
+			'cb'            => $columns['cb'], // Checkbox
+			'title'         => $columns['title'],
+			'stats'         => 'Statistics',
+			'finances'      => 'Finances',
+			'date'          => $columns['date']
+		);
+
+		return $new_columns;
+	}
+	
+
+	/**
+	 * Output content for the custom columns 
+	 * 
+	 * @param string $column
+	 * @param int $post_id
+	 */
+	public function echo_content_for_custom_columns( $column, $post_id ) {
+		switch ( $column ) {
+			case 'stats':
+				$stats = Wclu_Upsell_Offer::get_statistics( $post_id );
+
+				if ( count( $stats) ) {
+					$output =            __( 'Accepts', WCLU_TEXT_DOMAIN ) . ': ' . $stats[ self::EVENT_ACCEPT . 's' ];
+					$output .=  '<br>' . __( 'Skips', WCLU_TEXT_DOMAIN )   . ': ' . $stats[ self::EVENT_SKIP . 's' ];
+					$output .=  '<br>' . __( 'Views', WCLU_TEXT_DOMAIN )   . ': ' . $stats[ self::EVENT_VIEW . 's' ];
+				}
+				else {
+					$output = __( 'No data yet', WCLU_TEXT_DOMAIN );
+				}
+				break;
+
+			case 'finances':	
+				$stats = Wclu_Upsell_Offer::get_statistics( $post_id );
+				
+				if ( count( $stats) ) {
+					$accepts = $stats[ self::EVENT_ACCEPT . 's' ];
+					$income_per_accept  = $stats[ 'income' ] ?? 21; // TODO add calculation & saving of the income
+					$profit_per_accept  = $stats[ 'profit' ] ?? 11; // TODO add calculation & saving of the profit
+					
+					$revenue = $accepts * $income_per_accept;
+					$profit = $accepts * $profit_per_accept;
+					
+					$output =            __( 'Revenue', WCLU_TEXT_DOMAIN )  . ': ' . wc_price( $revenue );
+					$output .=  '<br>' . __( 'Profit', WCLU_TEXT_DOMAIN )   . ': ' . wc_price( $profit );
+				}
+				else {
+					$output = __( 'No data yet', WCLU_TEXT_DOMAIN );
+				}
+				break;
+		}
+
+		echo $output;
 	}
 
 	/**
@@ -225,7 +296,17 @@ class Wclu_Post_Type extends Wclu_Core {
 				// special case for checkboxes
 				$wclu_settings = $this->add_checkboxes_values( $wclu_settings );
 
-				update_post_meta( $post_id, self::UPSELL_SETTINGS, $wclu_settings );
+				$upsell_obj = Wclu_Db_Search::find_upsell_by_id( $post_id );
+				
+				if ( $upsell_obj ) { // upsell is valid, we can properly update its settings and calculate all financial data
+					
+					$upsell_obj->update_settings( $wclu_settings );
+					
+				} else { // fallback to the direct update
+					
+					update_post_meta( $post_id, self::UPSELL_SETTINGS, $wclu_settings ); 
+					
+				}
 				
 				$this->maybe_create_upsell_statistics( $post_id );
 			}

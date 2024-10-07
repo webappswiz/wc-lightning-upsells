@@ -75,7 +75,36 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 			$this->product_name = '???';
 		}
 	}
+	
+	/**
+	 * Save updated upsell settings into DB
+	 * 
+	 * @param array $new_settings
+	 */
+	public function update_settings( array $new_settings ) {
+		
+		$upsell_settings = $this->calculate_additional_info( $new_settings );
+		
+		update_post_meta( $this->id, self::UPSELL_SETTINGS, $upsell_settings ); 
+	}
 
+	
+	/**
+	 * Calculate updated upsell data based on the settings 
+	 * 
+	 * @param array $settings
+	 */
+	protected function calculate_additional_info( $settings ) {
+		
+		$full_settings = $settings;
+		
+		$full_settings['regular_product_price'] = $this->regular_product_price;
+		$full_settings['offered_product_price'] = $this->calculate_offered_price();
+		
+		return $full_settings;
+	}
+	
+	
 	/**
 	 * Calculates upsell offered price
 	 * @return float
@@ -370,5 +399,30 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 		}
 		
 		return $updated;
+	}
+	
+	/**
+	 * Returns array with the upsell statistics.
+	 * 
+	 * @param int $upsell_id
+	 * @return array
+	 */
+	public static function get_statistics( $upsell_id ) {
+	
+		global $wpdb;
+		
+		$upsell_table = $wpdb->prefix . 'wclu_upsells_data';
+
+		$select_sql = "SELECT * FROM $upsell_table WHERE upsell_id = %d LIMIT 1"; 
+
+		$select_query = $wpdb->prepare( $select_sql, array( $upsell_id ) );
+			
+		$result = $wpdb->get_row( $select_query, ARRAY_A );
+		
+		if ( ! $result ) {
+			return array();
+		}
+		
+		return $result;
 	}
 }
