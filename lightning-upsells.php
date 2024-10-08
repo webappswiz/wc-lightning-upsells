@@ -9,7 +9,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  * Requires at least: 5.4
  * Requires PHP: 7.4
- * Version: 0.1.8
+ * Version: 0.1.9
  */
 /*
   This program is free software; you can redistribute it and/or modify
@@ -25,28 +25,29 @@
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-*/
+ */
 
 require_once 'includes.php';
 
-define('WCLU_VERSION', '0.1.8');
-define('WCLU_TEXT_DOMAIN', 'wc-lightning-upsells');
+define( 'WCLU_VERSION', '0.1.9' );
+define( 'WCLU_SCHEMA_VERSION', '1' );
+define( 'WCLU_TEXT_DOMAIN', 'wc-lightning-upsells' );
 
-if (!defined('WCLU_URL')) {
-	define('WCLU_URL', plugin_dir_url(__FILE__));
+if ( ! defined( 'WCLU_URL' ) ) {
+	define( 'WCLU_URL', plugin_dir_url( __FILE__ ) );
 }
 
-if (!defined('WCLU_PATH')) {
-	define('WCLU_PATH', plugin_dir_path(__FILE__));
+if ( !defined( 'WCLU_PATH' ) ) {
+	define( 'WCLU_PATH', plugin_dir_path( __FILE__ ) );
 }
 
 $plugin_root = __FILE__;
 
 Wclu_Core::$plugin_root = $plugin_root;
 
-register_activation_hook($plugin_root, array('Wclu_Plugin', 'install'));
-register_deactivation_hook($plugin_root, array('Wclu_Plugin', 'uninstall'));
+register_activation_hook( $plugin_root, array('Wclu_Plugin', 'install') );
+register_deactivation_hook( $plugin_root, array('Wclu_Plugin', 'uninstall') );
 
-/*** Initialise Plugin ****/
+/* * * Initialise Plugin *** */
 
-$wclu_plugin = new Wclu_Plugin($plugin_root);
+$wclu_plugin = new Wclu_Plugin( $plugin_root );

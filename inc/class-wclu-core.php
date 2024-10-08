@@ -15,6 +15,9 @@ class Wclu_Core {
 	
 	// postmeta key used to save generation settings for each separate upsell
 	public const UPSELL_SETTINGS = 'wclu_settings';
+	
+	// postmeta key (for WooCommerce orders) used to mark order upsells as processed
+	public const UPSELL_PROCESSED = 'wclu_upsells_processed';
 
 	public static $prefix = 'wclu_';
 
@@ -44,9 +47,18 @@ class Wclu_Core {
 	
 	// available statistics event types for upsell
 	
-	public const EVENT_VIEW                   = 'view';
-	public const EVENT_SKIP                   = 'skip';
-	public const EVENT_ACCEPT                 = 'accept';
+	public const EVENT_VIEW                   = 'view'; // an upsell is viewed
+	public const EVENT_SKIP                   = 'skip'; // an upsell is skipped by a customer
+	public const EVENT_ACCEPT                 = 'accept'; // an upsell is accepted by a customer
+	public const EVENT_ORDER                  = 'order'; // an order with accepted upsell is completed
+	
+		
+	// available statistics types for upsell
+	
+	public const STAT_REVENUE                 = 'revenue'; // price paid by the customer for the upsell item 
+	
+	// name of the database table
+	public const TABLE_STATISTICS             = 'wclu_upsells_data';
 	
 	// name of the submit button that triggers POST form
 	public const BUTTON_SUMBIT = 'wclu-button';
@@ -83,6 +95,7 @@ class Wclu_Core {
 	public static $default_option_values = [
 		'use_default_template' => 1,
 		'default_upsell_template' => 'your awesome upsell',
+		'table_schema_version' => 1,
 	];
 
 	/**

@@ -378,7 +378,6 @@ class Wclu_Plugin extends Wclu_Core {
 		<?php
 	}
 	
-
 	/**
 	 * Creates DB tables when plugin is activated
 	 */
@@ -389,22 +388,66 @@ class Wclu_Plugin extends Wclu_Core {
 		// Include upgrade script
 		require_once( ABSPATH . '/wp-admin/includes/upgrade.php' );
 
-		$upsell_table = $wpdb->prefix . 'wclu_upsells_data';
+		$upsell_table = $wpdb->prefix . self::TABLE_STATISTICS;
 
-		// Create table if not exist
+		// Create the table if it does not exists
 		if ( $wpdb->get_var( "show tables like '$upsell_table'" ) != $upsell_table ) {
 
-			$orderSql = "CREATE TABLE `$upsell_table` (
+			$statisticsSql = "CREATE TABLE `$upsell_table` (
 				`upsell_id` INT NOT NULL PRIMARY KEY,
-				`views` INT NOT NULL DEFAULT 0,
-				`accepts` INT NOT NULL DEFAULT 0,
-				`skips` INT NOT NULL DEFAULT 0
+				`view` INT NOT NULL DEFAULT 0,
+				`accept` INT NOT NULL DEFAULT 0,
+				`order` INT NOT NULL DEFAULT 0,
+				`skip` INT NOT NULL DEFAULT 0,
+				`revenue` FLOAT NOT NULL DEFAULT 0,
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
-			// Create orders table
-			dbDelta( $orderSql );
+			// Create statistics table
+			dbDelta( $statisticsSql );
+		}
+		else { // maybe update table if it alresdy exists
+			
+			$table_version = self::get_table_schema_version();
+			
+			self::wc_log('maybe update table?', array( '$table_version' => $table_version ));
+			//self::maybe_update_database_tables( $table_version ); // will use this later
 		}
 	}
 
+	/**
+	 * To be used in future, when we have actual updates for the table structure
+	 * 
+	 * @global object $wpdb
+	 * @param int $table_version
+	 */
+	public static function maybe_update_database_tables( $table_version ) {
+		
+		global $wpdb;
+		
+		if ( $table_version < 1 ) {
+			if ( WCLU_SCHEMA_VERSION == 1 ) { // need to add "income" column after "skips"
+				$upsell_table = $wpdb->prefix . self::TABLE_STATISTICS;
+				$update_statistics_table_sql = "ALTER TABLE `$upsell_table` ADD COLUMN `income` FLOAT NOT NULL DEFAULT 0 AFTER `skip`;";
+				$wpdb->query( $update_statistics_table_sql );
+			}
+			
+			$stored_options = get_option('wclu_options', array());
+			$stored_options['table_schema_version'] = WCLU_SCHEMA_VERSION;
+			update_option( 'wclu_options', $stored_options );
+		}
+	}
+	
+	public static function get_table_schema_version() {
+		
+		$version = 0;
+		$stored_options = get_option('wclu_options', array());
+		
+		if ( count($stored_options) && isset($stored_options['table_schema_version']) ) {
+			$version = intval($stored_options['table_schema_version']);
+		}
+		
+		return $version;
+	}
+	
 }
 		

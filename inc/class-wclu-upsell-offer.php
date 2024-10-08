@@ -79,13 +79,30 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 	/**
 	 * Save updated upsell settings into DB
 	 * 
-	 * @param array $new_settings
+	 * @param array $new_settings data from POST
 	 */
 	public function update_settings( array $new_settings ) {
 		
 		$upsell_settings = $this->calculate_additional_info( $new_settings );
-		
 		update_post_meta( $this->id, self::UPSELL_SETTINGS, $upsell_settings ); 
+	}
+
+	/**
+	 * DEPRECATED
+	 * 
+	 * @param array $new_settings data from POST
+	 */
+	public function update_statistics( array $new_settings ) {
+
+		global $wpdb;
+		$upsell_table = $wpdb->prefix . self::TABLE_STATISTICS;
+		
+		$income = $new_settings['offered_product_price'];
+		$update_statistics_sql = "UPDATE `$upsell_table` SET `income` = %f WHERE `upsell_id` = %d";
+			
+		$update_statistics_query = $wpdb->prepare( $update_statistics_sql, array( $income, $this->id) );
+		
+		$wpdb->query( $update_statistics_query );
 	}
 
 	
@@ -96,28 +113,11 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 	 */
 	protected function calculate_additional_info( $settings ) {
 		
-		$full_settings = $settings;
-		
+		$full_settings = $settings;		
 		$full_settings['regular_product_price'] = $this->regular_product_price;
-		$full_settings['offered_product_price'] = $this->calculate_offered_price();
+		$full_settings['offered_product_price'] = $this->calculate_offered_price( $settings );
 		
 		return $full_settings;
-	}
-	
-	
-	/**
-	 * Calculates upsell offered price
-	 * @return float
-	 */
-	public function get_offered_price() {
-
-		$price = 10; // TODO calculate non-fixed prices;
-
-		if ($this->price_type === self::PRICE_TYPE_FIXED) {
-			$price = $this->offered_price;
-		}
-
-		return $price;
 	}
 
 	/**
@@ -219,30 +219,42 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 	/**
 	 * Get the discounted price which is offered in this upsell.
 	 * 
+	 * @param array $settings For the special case when using settings from POST 
 	 * @return float
 	 */
-	public function calculate_offered_price() {
+	public function calculate_offered_price( $settings = false ) {
 
-		$result = $this->regular_product_price;
+		$regular_product_price = $this->regular_product_price;
+		
+		if ( is_array( $settings ) ) {
+			$price_type            = $settings['price_type'];
+			$offered_price         = $settings['offered_price'];
+		}
+		else {	
+			$price_type            = $this->price_type;
+			$offered_price         = $this->offered_price;
+		}
+		
+		$result = $regular_product_price;
 
-		switch ($this->price_type) {
+		switch ( $price_type ) {
 
 			case self::PRICE_TYPE_DISCOUNT:
 
-				$result = $this->regular_product_price - $this->offered_price;
+				$result = $regular_product_price - $offered_price;
 				break;
 
 			case self::PRICE_TYPE_PERCENT_DISCOUNT:
 
-				$discount = $this->offered_price > 100 ? 1 : ( $this->offered_price / 100 );
+				$discount = $offered_price > 100 ? 1 : ( $offered_price / 100 );
 
-				$result = ( 1 - $discount ) * $this->regular_product_price;
+				$result = ( 1 - $discount ) * $regular_product_price;
 				break;
 
 			case self::PRICE_TYPE_FIXED:
 			default:
 
-				$result = $this->offered_price;
+				$result = $offered_price;
 				break;
 		}
 
@@ -368,34 +380,48 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 	 * @param string $event_type
 	 */
 	public function record_statistics_event( $event_type ) {
+		return self::record_statistics( $this->id, $event_type );
+	}
+	
+	/**
+	 * Increases column value in the statistics record for the specified upsell
+	 *
+	 * @param int $upsell_id
+	 * @param string $column
+	 * @param int|float $quantity
+	 * @param bool $float
+	 */
+	public static function record_statistics( $upsell_id, $column, $quantity = 1, $float = false ) {
 	
 		global $wpdb;
 		
 		$updated = false;
 		
-		switch ( $event_type ) {
-			case self::EVENT_ACCEPT:
-			case self::EVENT_SKIP:
-			case self::EVENT_VIEW:
-				$event_field = $event_type . 's'; // make table column name
-				break;
-			default:
-				$event_field = false;
-		}
+		$available_columns = [
+			self::EVENT_ACCEPT => 'int', 
+			self::EVENT_SKIP   => 'int',
+			self::EVENT_VIEW   => 'int',
+			self::EVENT_ORDER  => 'int',
+			self::STAT_REVENUE => 'float',
+		];
 		
-		if ( $event_field ) {
+		// event type must be one of the existing table columns
+		if ( array_key_exists( $column, $available_columns ) ) {
 			
-			$wp = $wpdb->prefix;
-			$upsell_table = $wpdb->prefix . 'wclu_upsells_data';
-
-
-			$update_sql = "UPDATE $upsell_table SET $event_field = $event_field + 1 WHERE upsell_id = %d LIMIT 1"; 
+			$upsell_table = $wpdb->prefix . self::TABLE_STATISTICS;
 			
-
-			$update_query = $wpdb->prepare( $update_sql, array( $this->id ) );
+			if ( $float && $available_columns[$column] === 'float' ) {
+				
+				$update_sql = "UPDATE $upsell_table SET `$column` = `$column` + %f WHERE upsell_id = %d LIMIT 1"; 
+				
+			} elseif ( ! $float && $available_columns[$column] === 'int' ) {
+				
+				$update_sql = "UPDATE $upsell_table SET `$column` = `$column` + %d WHERE upsell_id = %d LIMIT 1"; 
+			}
+			
+			$update_query = $wpdb->prepare( $update_sql, array( $quantity, $upsell_id ) );
 			
 			$updated = $wpdb->query( $update_query );
-			
 		}
 		
 		return $updated;
@@ -411,7 +437,7 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 	
 		global $wpdb;
 		
-		$upsell_table = $wpdb->prefix . 'wclu_upsells_data';
+		$upsell_table = $wpdb->prefix . self::TABLE_STATISTICS;
 
 		$select_sql = "SELECT * FROM $upsell_table WHERE upsell_id = %d LIMIT 1"; 
 

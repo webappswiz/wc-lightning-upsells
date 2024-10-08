@@ -87,8 +87,8 @@ class Wclu_Post_Type extends Wclu_Core {
 		$new_columns = array(
 			'cb'            => $columns['cb'], // Checkbox
 			'title'         => $columns['title'],
-			'stats'         => 'Statistics',
-			'finances'      => 'Finances',
+			'stats'         => __( 'Statistics', WCLU_TEXT_DOMAIN ),
+			'revenue'       => __( 'Revenue', WCLU_TEXT_DOMAIN ),
 			'date'          => $columns['date']
 		);
 
@@ -108,32 +108,28 @@ class Wclu_Post_Type extends Wclu_Core {
 				$stats = Wclu_Upsell_Offer::get_statistics( $post_id );
 
 				if ( count( $stats) ) {
-					$output =            __( 'Accepts', WCLU_TEXT_DOMAIN ) . ': ' . $stats[ self::EVENT_ACCEPT . 's' ];
-					$output .=  '<br>' . __( 'Skips', WCLU_TEXT_DOMAIN )   . ': ' . $stats[ self::EVENT_SKIP . 's' ];
-					$output .=  '<br>' . __( 'Views', WCLU_TEXT_DOMAIN )   . ': ' . $stats[ self::EVENT_VIEW . 's' ];
+					$output =            __( 'Accepts', WCLU_TEXT_DOMAIN ) . ': ' . $stats[self::EVENT_ACCEPT];
+					$output .=  '<br>' . __( 'Orders', WCLU_TEXT_DOMAIN )  . ': ' . $stats[self::EVENT_ORDER];
+					$output .=  '<br>' . __( 'Skips', WCLU_TEXT_DOMAIN )   . ': ' . $stats[self::EVENT_SKIP];
+					$output .=  '<br>' . __( 'Views', WCLU_TEXT_DOMAIN )   . ': ' . $stats[self::EVENT_VIEW];
 				}
 				else {
 					$output = __( 'No data yet', WCLU_TEXT_DOMAIN );
 				}
+				
 				break;
 
-			case 'finances':	
+			case 'revenue':	
 				$stats = Wclu_Upsell_Offer::get_statistics( $post_id );
 				
 				if ( count( $stats) ) {
-					$accepts = $stats[ self::EVENT_ACCEPT . 's' ];
-					$income_per_accept  = $stats[ 'income' ] ?? 21; // TODO add calculation & saving of the income
-					$profit_per_accept  = $stats[ 'profit' ] ?? 11; // TODO add calculation & saving of the profit
-					
-					$revenue = $accepts * $income_per_accept;
-					$profit = $accepts * $profit_per_accept;
-					
-					$output =            __( 'Revenue', WCLU_TEXT_DOMAIN )  . ': ' . wc_price( $revenue );
-					$output .=  '<br>' . __( 'Profit', WCLU_TEXT_DOMAIN )   . ': ' . wc_price( $profit );
+					$revenue = $stats[self::STAT_REVENUE];
+					$output = wc_price( $revenue );
 				}
 				else {
 					$output = __( 'No data yet', WCLU_TEXT_DOMAIN );
 				}
+				
 				break;
 		}
 
@@ -323,7 +319,7 @@ class Wclu_Post_Type extends Wclu_Core {
 
 		global $wpdb;
 
-		$upsell_table = $wpdb->prefix . 'wclu_upsells_data';
+		$upsell_table = $wpdb->prefix . self::TABLE_STATISTICS;
 
 		// Check if there is already a statistics record for this upsell
 		$checking_sql = "SELECT up.`upsell_id` from $upsell_table AS up WHERE up.`upsell_id` = %d ";
