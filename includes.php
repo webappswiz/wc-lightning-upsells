@@ -4,6 +4,7 @@ include('inc/class-wclu-core.php');
 include('inc/class-wclu-plugin.php');
 
 include('inc/class-wclu-upsell-offer.php');
+include('inc/class-wclu-data-collector.php');
 
 include('inc/admin/class-wclu-settings.php');
 include('inc/admin/class-wclu-post-type.php');

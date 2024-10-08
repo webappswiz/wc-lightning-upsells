@@ -57,8 +57,10 @@ class Wclu_Core {
 	
 	public const STAT_REVENUE                 = 'revenue'; // price paid by the customer for the upsell item 
 	
-	// name of the database table
+	// names of the database tables
+	
 	public const TABLE_STATISTICS             = 'wclu_upsells_data';
+	public const TABLE_CUSTOMERS_DATA          = 'wclu_customers_data';
 	
 	// name of the submit button that triggers POST form
 	public const BUTTON_SUMBIT = 'wclu-button';
@@ -71,6 +73,7 @@ class Wclu_Core {
 	
 	// Actions triggered by buttons in backend area
 	public const ACTION_SAVE_OPTIONS = 'Save settings';
+	public const ACTION_CALCULATE = 'Add bar into foo';
 
 	public static $error_messages = [];
 	public static $messages = [];

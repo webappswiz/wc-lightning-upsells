@@ -389,21 +389,34 @@ class Wclu_Plugin extends Wclu_Core {
 		require_once( ABSPATH . '/wp-admin/includes/upgrade.php' );
 
 		$upsell_table = $wpdb->prefix . self::TABLE_STATISTICS;
-
-		// Create the table if it does not exists
+		$customers_table = $wpdb->prefix . self::TABLE_CUSTOMERS_DATA;
+		
+		// Create tables if they do not exist yet
 		if ( $wpdb->get_var( "show tables like '$upsell_table'" ) != $upsell_table ) {
 
-			$statisticsSql = "CREATE TABLE `$upsell_table` (
-				`upsell_id` INT NOT NULL PRIMARY KEY,
-				`view` INT NOT NULL DEFAULT 0,
-				`accept` INT NOT NULL DEFAULT 0,
-				`order` INT NOT NULL DEFAULT 0,
-				`skip` INT NOT NULL DEFAULT 0,
-				`revenue` FLOAT NOT NULL DEFAULT 0,
+			$statistics_sql = "CREATE TABLE `$upsell_table` (
+				`upsell_id`    INT NOT NULL PRIMARY KEY,
+				`view`         INT NOT NULL DEFAULT 0,
+				`accept`       INT NOT NULL DEFAULT 0,
+				`order`        INT NOT NULL DEFAULT 0,
+				`skip`         INT NOT NULL DEFAULT 0,
+				`revenue`      FLOAT NOT NULL DEFAULT 0
 			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
 
 			// Create statistics table
-			dbDelta( $statisticsSql );
+			dbDelta( $statistics_sql );
+			
+			$customers_sql = "CREATE TABLE `$customers_table` (
+				`user_id`             INT NOT NULL PRIMARY KEY,
+				`number_of_orders`    INT NOT NULL DEFAULT 0,
+				`order_sum`           FLOAT NOT NULL DEFAULT 0,
+				`number_of_products`  FLOAT NOT NULL DEFAULT 0,
+				`account_age`         FLOAT NOT NULL DEFAULT 0,
+				`subscription_status` INT NOT NULL DEFAULT 0
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+			// Create customers table
+			dbDelta( $customers_sql );
 		}
 		else { // maybe update table if it alresdy exists
 			

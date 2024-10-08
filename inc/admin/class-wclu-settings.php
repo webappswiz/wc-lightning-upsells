@@ -50,6 +50,12 @@ class Wclu_Settings extends Wclu_Core {
 
 					update_option('wclu_options', $stored_options);
 					break;
+				case self::ACTION_CALCULATE:
+					
+					$user_id = $_POST['calc_user_id'];
+					Wclu_Data_Collector::process_customer_data( $user_id );
+					self::wc_log( 'process_customer_data', array( 'suer' => $user_id ) );
+					break;
 			}
 		}
 
@@ -107,6 +113,34 @@ class Wclu_Settings extends Wclu_Core {
 
 				<p class="submit">  
 						<input type="submit" id="wclu-button-save" name="wclu-button-save" class="button button-primary" style="" value="<?php echo self::ACTION_SAVE_OPTIONS; ?>" />
+				</p>
+
+		</form>
+
+		<?php
+		
+		$customer_field_set = array(
+			array(
+				'name' => "calc_user_id",
+				'type' => 'text',
+				'label' => 'Calculate user',
+				'value' => 0,
+			)
+		);
+
+		?>
+		<form method="POST" >
+
+				<h2><?php esc_html_e('Adding foo', 'wclu'); ?></h2>
+
+				<table class="wclu-global-table">
+						<tbody>
+								<?php self::display_field_set($customer_field_set); ?>
+						</tbody>
+				</table>
+
+				<p class="submit">  
+						<input type="submit" id="wclu-button-save" name="wclu-button-save" class="button button-primary" style="" value="<?php echo self::ACTION_CALCULATE; ?>" />
 				</p>
 
 		</form>
