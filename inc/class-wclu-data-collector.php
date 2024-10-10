@@ -31,6 +31,23 @@ class Wclu_Data_Collector extends Wclu_Core {
 		
 	}  
 
+	public static function get_customer_range( int $start, int $end ) {
+		global $wpdb;
+
+		$wp = $wpdb->prefix;
+
+		$sql = "SELECT u.`ID` AS 'id' from {$wp}users AS u
+			WHERE u.`ID` >= %d AND u.`ID` <= %d ";
+
+		$query_sql = $wpdb->prepare($sql, array( $start, $end ) );
+		
+		$results  = $wpdb->get_results($query_sql, ARRAY_A);
+		
+		$user_ids = array_map( function( $a ) { return $a['id']; }, $results );
+		
+		return $user_ids;
+	}
+	
 	public static function process_customer_data( $user_id ) {
 		
 		global $wpdb;

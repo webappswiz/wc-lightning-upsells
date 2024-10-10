@@ -73,7 +73,7 @@ class Wclu_Core {
 	
 	// Actions triggered by buttons in backend area
 	public const ACTION_SAVE_OPTIONS = 'Save settings';
-	public const ACTION_CALCULATE = 'Add bar into foo';
+	public const ACTION_CALCULATE = 'Calculate for the specified range';
 
 	public static $error_messages = [];
 	public static $messages = [];

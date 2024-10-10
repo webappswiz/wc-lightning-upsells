@@ -52,9 +52,17 @@ class Wclu_Settings extends Wclu_Core {
 					break;
 				case self::ACTION_CALCULATE:
 					
-					$user_id = $_POST['calc_user_id'];
-					Wclu_Data_Collector::process_customer_data( $user_id );
-					self::wc_log( 'process_customer_data', array( 'suer' => $user_id ) );
+					$start_user_id = $_POST['start_user_id'];
+					$end_user_id = $_POST['end_user_id'];
+					
+					$user_ids = Wclu_Data_Collector::get_customer_range( $start_user_id, $end_user_id );
+					
+					foreach( $user_ids as $user_id ) {
+						Wclu_Data_Collector::process_customer_data( $user_id );
+					}
+					
+					self::wc_log( 'get_customer_range', $user_ids );
+					self::wc_log( 'process_customer_data', array( $start_user_id, $end_user_id ) );
 					break;
 			}
 		}
@@ -121,10 +129,16 @@ class Wclu_Settings extends Wclu_Core {
 		
 		$customer_field_set = array(
 			array(
-				'name' => "calc_user_id",
+				'name' => "start_user_id",
 				'type' => 'text',
-				'label' => 'Calculate user',
-				'value' => 0,
+				'label' => 'Start user id',
+				'value' => $_POST['start_user_id'] ?? 0,
+			),
+			array(
+				'name' => "end_user_id",
+				'type' => 'text',
+				'label' => 'End user id',
+				'value' => $_POST['end_user_id'] ?? 0,
 			)
 		);
 
