@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Gathers customer data into separate table to allow clustering analysis of customer behaviour
+ * Gathers customer data into separate table to allow clustering analysis of customer behavior
  */
 class Wclu_Data_Collector extends Wclu_Core {
 
@@ -31,6 +31,24 @@ class Wclu_Data_Collector extends Wclu_Core {
 		
 	}  
 
+	public static function get_total_number_of_customers() {
+		global $wpdb;
+
+		$wp = $wpdb->prefix;
+		$sql = "SELECT COUNT(u.`ID`) AS 'total' from {$wp}users AS u WHERE 1";
+		$total  = $wpdb->get_var( $sql );
+
+		return intval($total);
+	}
+	
+	/**
+	 * Returns IDs of existing users, which belong to the specified range of IDs: { start, end }
+	 * 
+	 * @global object $wpdb
+	 * @param int $start starting ID
+	 * @param int $end last ID
+	 * @return array
+	 */
 	public static function get_customer_range( int $start, int $end ) {
 		global $wpdb;
 
@@ -47,6 +65,33 @@ class Wclu_Data_Collector extends Wclu_Core {
 		
 		return $user_ids;
 	}
+	
+	/**
+	 * Returns IDs of existing users, which belong to random sample of specified size.
+	 * 
+	 * E.g. if a DB has 1000 users, get_customer_sample( 0.015 ) will return 15 randomly chosen IDs.
+	 * 
+	 * @global object $wpdb
+	 * @param float $size number from 0 to 100, the size of sample in percents
+	 * @return array
+	 */
+	public static function get_customer_sample( float $size ) {
+		global $wpdb;
+
+		$wp = $wpdb->prefix;
+
+		$sql = "SELECT u.`ID` AS 'id' from {$wp}users AS u
+			WHERE RAND() < %f ";
+
+		$query_sql = $wpdb->prepare($sql, array( $size/100 ) );
+		
+		$results  = $wpdb->get_results($query_sql, ARRAY_A);
+		
+		$user_ids = array_map( function( $a ) { return $a['id']; }, $results );
+		
+		return $user_ids;
+	}
+	
 	
 	public static function process_customer_data( $user_id ) {
 		

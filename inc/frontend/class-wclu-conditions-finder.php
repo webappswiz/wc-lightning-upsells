@@ -54,6 +54,10 @@ class Wclu_Conditions_Finder extends Wclu_Core {
 				'type' => self::CND_CART_PRODUCTS,
 				'value' => self::find_products_in_cart() 
 			),
+			array(
+				'type' => self::CND_CUSTOMER_SEGMENT,
+				'value' => self::find_customer_segments()
+			),
 		);
 		
 		return $conditions;
@@ -66,5 +70,24 @@ class Wclu_Conditions_Finder extends Wclu_Core {
 	 */
 	public static function find_user_history() {
 		
+	}
+	
+	/**
+	 * 
+	 * @return array
+	 */
+	public static function find_customer_segments( $user_id = 0 ) {
+		
+		$segments = array();
+		
+		if ( $user_id == 0 ) {
+			$user_id = get_current_user_id();
+		}
+		
+		if ( $user_id != 0 ) {
+			$segments = Wclu_Customer_Segmentor::get_customer_segments( $user_id );
+		}
+		
+		return $segments;
 	}
 }

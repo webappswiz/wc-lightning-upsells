@@ -244,7 +244,7 @@ class Wclu_Post_Type extends Wclu_Core {
 				$postfield = self::METABOX_FIELD_NAME;
 				$settings = self::get_upsell_settings( $upsell_id );
 
-				echo('$settings<pre>' . print_r( $settings, 1 ) . '</pre>' );
+				//echo('$settings<pre>' . print_r( $settings, 1 ) . '</pre>' );
 				$custom_css = $settings['custom_css'] ?? '';
 				?>
 
@@ -342,11 +342,16 @@ class Wclu_Post_Type extends Wclu_Core {
 
 	protected function add_checkboxes_values( $wclu_settings ) {
 
-		$checkboxes = ['cart_total_enabled', 'cart_contents_enabled', 'cart_must_hold_all'];
+		$checkboxes = [
+			'cart_total_enabled'          => 1,
+			'cart_contents_enabled'       => 1,
+			'cart_must_hold_all'          => 0,
+			'customer_segment_enabled'    => 1
+		];
 
-		foreach ( $checkboxes as $checkbox ) {
+		foreach ( $checkboxes as $checkbox => $default_checkbox_value ) {
 			if ( !isset( $wclu_settings[$checkbox] ) ) {
-				$wclu_settings[$checkbox] = false;
+				$wclu_settings[$checkbox] = $default_checkbox_value;
 			} else {
 				$wclu_settings[$checkbox] = true;
 			}

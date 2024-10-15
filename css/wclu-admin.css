@@ -18,6 +18,7 @@ div#wclu-upsell-setup ul.wc-tabs li {
   display: block;
   position: relative;
 }
+
 div#wclu-upsell-setup ul.wc-tabs li a {
   margin: 0;
   padding: 10px;
@@ -27,19 +28,23 @@ div#wclu-upsell-setup ul.wc-tabs li a {
   line-height: 20px !important;
   border-bottom: 1px solid #eee;
 }
+
 div#wclu-upsell-setup ul.wc-tabs li a span {
   margin-left: 0.618em;
   margin-right: 0.618em;
 }
+
 div#wclu-upsell-setup .inside {
   margin: 0;
   padding: 0;
 }
+
 div#wclu-upsell-setup .active a {
   color: #555;
   position: relative;
   background-color: #eee;
 }
+
 div#wclu-upsell-setup .offer_data {
   width: 100%;
 }
@@ -59,7 +64,11 @@ div#wclu-upsell-setup .panel-wrap {
   background: #fff;
 }
 
-select#wclu_upsell_cart_contents + span.select2 {
+select.wclu-select-woo + span.select2 {
     min-width: 67%;
     margin-left: 15px;
+}
+
+div#wclu-upsell-conditions p.form-field {
+    margin-bottom: 50px;
 }

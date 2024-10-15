@@ -44,6 +44,7 @@ class Wclu_Core {
 	public const CND_CART_TOTAL               = 'ca_tot';
 	public const CND_CART_PRODUCTS            = 'ca_items';
 	public const CND_USER_BOUGHT              = 'user_items';
+	public const CND_CUSTOMER_SEGMENT         = 'cust_segment';
 	
 	// available statistics event types for upsell
 	
@@ -52,15 +53,23 @@ class Wclu_Core {
 	public const EVENT_ACCEPT                 = 'accept'; // an upsell is accepted by a customer
 	public const EVENT_ORDER                  = 'order'; // an order with accepted upsell is completed
 	
-		
 	// available statistics types for upsell
 	
 	public const STAT_REVENUE                 = 'revenue'; // price paid by the customer for the upsell item 
 	
+	// predefined segments of customers
+	
+	public const CUSTOMER_HIGH_SPENDER        = 74311;
+	public const CUSTOMER_REGULAR_BUYER       = 74312;
+	public const CUSTOMER_FIRST_TIMER         = 74313;
+	public const CUSTOMER_SHOPS_DISCOUNT      = 74314;
+	
+	
 	// names of the database tables
 	
 	public const TABLE_STATISTICS             = 'wclu_upsells_data';
-	public const TABLE_CUSTOMERS_DATA          = 'wclu_customers_data';
+	public const TABLE_CUSTOMERS_DATA         = 'wclu_customers_data';
+	public const TABLE_CUSTOMER_SEGMENTS      = 'wclu_customer_segments';
 	
 	// name of the submit button that triggers POST form
 	public const BUTTON_SUMBIT = 'wclu-button';
@@ -72,8 +81,10 @@ class Wclu_Core {
 	const METABOX_FIELD_NAME = 'wclu_post_data';
 	
 	// Actions triggered by buttons in backend area
-	public const ACTION_SAVE_OPTIONS = 'Save settings';
-	public const ACTION_CALCULATE = 'Calculate for the specified range';
+	public const ACTION_SAVE_OPTIONS                     = 'Save settings';
+	public const ACTION_CALCULATE_RANGE                  = 'Calculate for the specified range';
+	public const ACTION_CALCULATE_RANDOM_SAMPLE          = 'Calculate for the random sample';
+	public const ACTION_SAVE_CUSTOMER_SETTINGS           = 'Save settings';
 
 	public static $error_messages = [];
 	public static $messages = [];
@@ -85,8 +96,10 @@ class Wclu_Core {
 	 * @var array
 	 */
 	public static $option_names = [
-		'use_default_template' => 'bool',
-		'default_upsell_template' => 'string',
+		'use_default_template'       => 'bool',
+		'default_upsell_template'    => 'string',
+		'top_spender_percentile'     => 'float',
+		'regular_buyer_threshold'    => 'integer'
 	];
 
 	/**
@@ -99,6 +112,8 @@ class Wclu_Core {
 		'use_default_template' => 1,
 		'default_upsell_template' => 'your awesome upsell',
 		'table_schema_version' => 1,
+		'top_spender_percentile'     => 75,
+		'regular_buyer_threshold'    => 3
 	];
 
 	/**
@@ -113,10 +128,13 @@ class Wclu_Core {
 		'offered_price'               => 0, // float
 		'cart_total_condition'        => 0, // float
 		'cart_condition_type'         => self::CART_CND_GREATER,
-		'cart_total_enabled'          => 0, // bool
-		'cart_contents_enabled'       => 0, // bool
+		'cart_total_enabled'          => 1, // bool
+		'cart_contents_enabled'       => 1, // bool
+		'customer_segments_enabled'   => 1, // bool
 		'cart_must_hold_all'          => 0, // bool
+		
 		'cart_contents'               => array(),
+		'customer_segments'           => array(),
 	];
 
 	/**
@@ -148,8 +166,31 @@ class Wclu_Core {
 		}
 	}
 
-	protected function display_messages($error_messages, $messages) {
+	protected static function render_message( $message_text, $is_error = false ) {
+		
+		if ( ! $is_error )  {
+			$out = '<div class="notice-info notice is-dismissible"><p>'
+								. '<strong>'
+								. $message_text
+								. '</strong></p>'
+								. '<button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button>'
+								. '</div>';
+		} else {
+			$out = '<div class="notice-error settings-error notice is-dismissible"><p>'
+								. '<strong>'
+								. $message_text
+								. '</strong></p>'
+								. '<button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button>'
+								. '</div>';
+		}
+		
+		return $out;
+	}
+		
+	protected function display_messages( $error_messages, $messages ) {
+		
 		$out = '';
+		
 		if (count($error_messages)) {
 			foreach ($error_messages as $message) {
 
@@ -159,23 +200,13 @@ class Wclu_Core {
 					$message_text = trim($message);
 				}
 
-				$out .= '<div class="notice-error settings-error notice is-dismissible"><p>'
-								. '<strong>'
-								. $message_text
-								. '</strong></p>'
-								. '<button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button>'
-								. '</div>';
+				$out .= self::render_message( $message_text, true );
 			}
 		}
 
 		if (count($messages)) {
 			foreach ($messages as $message) {
-				$out .= '<div class="notice-info notice is-dismissible"><p>'
-								. '<strong>'
-								. $message
-								. '</strong></p>'
-								. '<button type="button" class="notice-dismiss"><span class="screen-reader-text">Dismiss this notice.</span></button>'
-								. '</div>';
+				$out .= self::render_message( $message_text, false );
 			}
 		}
 
@@ -405,8 +436,19 @@ EOT;
 	 * @param array $value
 	 */
 	public static function make_number_field($field, $value) {
+		
+		$params = '';
+		
+		$available_params = [ 'step', 'min', 'max' ];
+		
+		foreach ( $available_params as $param ) {
+			if ( isset( $field[ $param ]) ) {
+				$params .= "$param='{$field[ $param ]}' ";
+			}
+		}
+		
 		$out = <<<EOT
-      <input type="number" id="wclu_{$field['id']}" name="{$field['name']}" value="{$value}" class="wclu-number-field">
+      <input type="number" id="wclu_{$field['id']}" name="{$field['name']}" $params value="{$value}" class="wclu-number-field">
 EOT;
 		return $out;
 	}
@@ -504,7 +546,7 @@ EOT;
 	public static function get_upsell_settings(int $upsell_id) {
 		$settings = get_post_meta($upsell_id, self::UPSELL_SETTINGS, true);
 
-		if (!is_array($settings)) {
+		if ( ! is_array($settings) ) {
 			$settings = self::$default_upsell_settings;
 		}
 

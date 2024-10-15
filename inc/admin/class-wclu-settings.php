@@ -31,6 +31,7 @@ class Wclu_Settings extends Wclu_Core {
 
 			switch ($_POST['wclu-button-save']) {
 				case self::ACTION_SAVE_OPTIONS:
+				case self::ACTION_SAVE_CUSTOMER_SETTINGS:
 
 					$stored_options = get_option('wclu_options', array());
 
@@ -50,7 +51,7 @@ class Wclu_Settings extends Wclu_Core {
 
 					update_option('wclu_options', $stored_options);
 					break;
-				case self::ACTION_CALCULATE:
+				case self::ACTION_CALCULATE_RANGE:
 					
 					$start_user_id = $_POST['start_user_id'];
 					$end_user_id = $_POST['end_user_id'];
@@ -63,6 +64,26 @@ class Wclu_Settings extends Wclu_Core {
 					
 					self::wc_log( 'get_customer_range', $user_ids );
 					self::wc_log( 'process_customer_data', array( $start_user_id, $end_user_id ) );
+					break;
+			
+				case self::ACTION_CALCULATE_RANDOM_SAMPLE:
+					
+					$sample_size = $_POST['sample_size'];
+					
+					if ( $sample_size > 0 && $sample_size <= 100) {
+					
+						$user_ids = Wclu_Data_Collector::get_customer_sample( $sample_size );
+					
+						foreach( $user_ids as $user_id ) {
+							Wclu_Data_Collector::process_customer_data( $user_id );
+						}
+
+						self::wc_log( 'get_customer_range - RANDOM ', $user_ids );
+					}
+					else {
+						$result = self::render_message( 'Please enter valid sample size ( a number less or equal to 100)' );
+					}
+					
 					break;
 			}
 		}
@@ -81,10 +102,63 @@ class Wclu_Settings extends Wclu_Core {
 		echo $action_results;
 
 		self::load_options();
+		
+		?>
 
+			<h1><?php esc_html_e('Lightning Upsells Dashboard', 'wclu'); ?></h1>
+			
+			<br><br><br>
+		
+		<?php 
+		//self::render_customer_categories();
 		self::render_settings_form();
 	}
 
+
+	public static function render_customer_categories() {
+
+		$customers_settings_field_set = array(
+			array(
+				'name' => "top_spender_percentile",
+				'type' => 'number',
+				'label' => 'Percentile to use to define top spenders',
+				'min' => 0,
+				'max' => 100,
+				'step' => 1,
+				'value' => self::$option_values['top_spender_percentile'],
+			),
+			array(
+				'name' => "regular_buyer_threshold",
+				'type' => 'number',
+				'label' => 'Threshold to define regular buyer (min. number of orders)',
+				'min' => 0,
+				'max' => 100,
+				'step' => 1,
+				'value' => self::$option_values['regular_buyer_threshold'],
+			)
+		);
+		?> 
+
+	<form method="POST" >
+
+				<h2><?php esc_html_e('Categories of customers', 'wclu'); ?></h2>
+
+				<table class="wclu-global-table">
+						<tbody>
+								<?php self::display_field_set( $customers_settings_field_set ); ?>
+						</tbody>
+				</table>
+
+				<p class="submit">  
+						<input type="submit" id="wclu-button-save" name="wclu-button-save" class="button button-primary" style="" value="<?php echo self::ACTION_SAVE_CUSTOMER_SETTINGS; ?>" />
+				</p>
+
+		</form>
+
+		<?php
+
+	}
+	
 	public static function render_settings_form() {
 
 		$global_settings_field_set = array(
@@ -108,8 +182,6 @@ class Wclu_Settings extends Wclu_Core {
 		?> 
 
 		<form method="POST" >
-
-				<h1><?php esc_html_e('Lightning Upsells Dashboard', 'wclu'); ?></h1>
 
 				<h2><?php esc_html_e('Settings', 'wclu'); ?></h2>
 
@@ -145,7 +217,7 @@ class Wclu_Settings extends Wclu_Core {
 		?>
 		<form method="POST" >
 
-				<h2><?php esc_html_e('Adding foo', 'wclu'); ?></h2>
+				<h2><?php esc_html_e('Calculate customer history for the range of users', 'wclu'); ?></h2>
 
 				<table class="wclu-global-table">
 						<tbody>
@@ -154,10 +226,64 @@ class Wclu_Settings extends Wclu_Core {
 				</table>
 
 				<p class="submit">  
-						<input type="submit" id="wclu-button-save" name="wclu-button-save" class="button button-primary" style="" value="<?php echo self::ACTION_CALCULATE; ?>" />
+						<input type="submit" id="wclu-button-save" name="wclu-button-save" class="button button-primary" style="" value="<?php echo self::ACTION_CALCULATE_RANGE; ?>" />
 				</p>
 
 		</form>
+	<?php
+		
+		$rand_field_set = array(
+			array(
+				'name' => "sample_size",
+				'type' => 'number',
+				'label' => 'Sample size, in % of total data',
+				'min' => 0,
+				'max' => 100,
+				'step' => 0.1,
+				'value' => 0,
+			)
+		);
+
+		$total = Wclu_Data_Collector::get_total_number_of_customers();
+		?>
+		<form method="POST" >
+
+				<h2><?php esc_html_e('Calculate customer history for the random % of users', 'wclu'); ?></h2>
+
+				Total number of customers: <span id="wclu-total"><?php echo( $total ); ?></span><br>
+				You are about to get a sample of <span id="sample_size">0</span> customers (<span id="sample_value">0</span> percent).<br>
+				<table class="wclu-global-table">
+						<tbody>
+								<?php self::display_field_set($rand_field_set); ?>
+						</tbody>
+				</table>
+				
+				<script>
+					function calculatePercentage( e ) {
+						
+							const originalNumber = parseInt(document.getElementById('wclu-total').textContent);
+							const percentage = parseFloat(document.getElementById('wclu_sample-size').value);
+
+							if ( isNaN(percentage) || percentage == 0 ) {
+									document.getElementById('sample_size').textContent = '???';
+									return;
+							}
+
+							document.getElementById('sample_value').textContent = percentage; 
+							
+							const result = Math.round( (originalNumber * percentage) / 100 );
+							document.getElementById('sample_size').textContent = `approx. ${result}`;
+					}
+					
+					document.getElementById('wclu_sample-size').addEventListener('change', calculatePercentage );
+				</script>
+
+				<p class="submit">  
+						<input type="submit" id="wclu-button-save" name="wclu-button-save" class="button button-primary" style="" value="<?php echo self::ACTION_CALCULATE_RANDOM_SAMPLE; ?>" />
+				</p>
+
+		</form>
+
 		<?php
 	}
 }

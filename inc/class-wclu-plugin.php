@@ -388,8 +388,9 @@ class Wclu_Plugin extends Wclu_Core {
 		// Include upgrade script
 		require_once( ABSPATH . '/wp-admin/includes/upgrade.php' );
 
-		$upsell_table = $wpdb->prefix . self::TABLE_STATISTICS;
-		$customers_table = $wpdb->prefix . self::TABLE_CUSTOMERS_DATA;
+		$upsell_table     = $wpdb->prefix . self::TABLE_STATISTICS;
+		$customers_table  = $wpdb->prefix . self::TABLE_CUSTOMERS_DATA;
+		$segments_table   = $wpdb->prefix . self::TABLE_CUSTOMER_SEGMENTS;
 		
 		// Create tables if they do not exist yet
 		if ( $wpdb->get_var( "show tables like '$upsell_table'" ) != $upsell_table ) {
@@ -417,6 +418,14 @@ class Wclu_Plugin extends Wclu_Core {
 
 			// Create customers table
 			dbDelta( $customers_sql );
+			
+			$segments_sql = "CREATE TABLE `$segments_table` (
+				`user_id`             INT NOT NULL,
+				`segment_id`          INT NOT NULL DEFAULT 0,
+			) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+
+			// Create segments table
+			dbDelta( $segments_sql );
 		}
 		else { // maybe update table if it alresdy exists
 			

@@ -34,10 +34,13 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 	public $offered_price               = 0; // float
 	public $cart_total_condition        = 0; // float
 	public $cart_condition_type         = self::CART_CND_GREATER;
-	public $cart_total_enabled          = 0; // bool
-	public $cart_contents_enabled       = 0; // bool
+	public $cart_total_enabled          = 1; // bool
+	public $cart_contents_enabled       = 1; // bool
 	public $cart_must_hold_all          = 0; // bool
+	public $customer_segments_enabled   = 1; // bool
+	
 	public $cart_contents               = array();
+	public $customer_segments           = array();
 	
 
 	/**
@@ -291,9 +294,10 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 
 		// list of methods which can be used to check various conditions
 		$available_methods = [
-			self::CND_CART_TOTAL      => 'matches_cart_total',
-			self::CND_CART_PRODUCTS   => 'matches_cart_products',
-			self::CND_USER_BOUGHT     => 'matches_user_purchases'
+			self::CND_CART_TOTAL        => 'matches_cart_total',
+			self::CND_CART_PRODUCTS     => 'matches_cart_products',
+			self::CND_USER_BOUGHT       => 'matches_user_purchases',
+			self::CND_CUSTOMER_SERMENT  => 'matches_customer_segment'
 		];
 
 		if ( array_key_exists( $condition['type'], $available_methods ) && method_exists( $this, $available_methods[ $condition['type'] ] ) ) {
@@ -333,6 +337,30 @@ class Wclu_Upsell_Offer extends Wclu_Core {
 		return $result;
 	}
 	
+	/**
+	 * Checks if this upsell meets the customer segment condition
+	 * 
+	 * @return bool
+	 */
+	public function matches_customer_segment( $customer_segments ) {
+
+		$result = true; // by default this upsell matches all customers
+
+		if ( $this->customer_segments_enabled && count( $this->customer_segments ) ) { // this upsell is shown only when it matches the visitor's segment
+			
+			$result = false;
+			
+			foreach ( $this->customer_segments as $allowed_segment ) {
+				
+				if ( in_array( $allowed_segment, $customer_segments ) ) {
+					$result = true;
+					break;
+				}
+			}
+		}
+
+		return $result;
+	}
 	
 	/**
 	 * Checks if this upsell meets the cart contents condition
